@@ -12,6 +12,7 @@ class Packet:
     timestamp: float = field(default_factory=lambda: datetime.now(timezone.utc).timestamp())
     length: int = 64
     flags: str = ""
+    interface: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
@@ -32,6 +33,12 @@ class Alert:
     id: Optional[int] = None
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     status: str = "ACTIVE"
+    # The monitored asset this alert relates to ("" when monitoring all traffic).
+    asset_ip: str = ""
+    # Observed evidence backing this detection (counts, ports, window, rate). Never fabricated.
+    evidence: Dict[str, Any] = field(default_factory=dict)
+    first_seen: Optional[float] = None
+    last_seen: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

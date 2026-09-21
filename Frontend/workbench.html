@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cybersecurity Analyst Workbench</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body{background:var(--bg-dark);color:var(--text-primary);font-family:var(--font-sans);margin:0}
+  .wb-top{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border-color);background:rgba(10,15,28,.9);position:sticky;top:0;z-index:20}
+  .wb-top .brand{font-weight:700;letter-spacing:.04em}
+  .wb-top .spacer{flex:1}
+  .wb-top a,.wb-top button{background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;text-decoration:none}
+  .wb-top a:hover,.wb-top button:hover{color:var(--text-primary);border-color:var(--border-bright)}
+  .wb-shell{display:flex;min-height:calc(100vh - 57px)}
+  .wb-nav{width:210px;border-right:1px solid var(--border-color);padding:14px 10px;display:flex;flex-direction:column;gap:4px}
+  .wb-nav button{text-align:left;background:none;border:none;color:var(--text-secondary);padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+  .wb-nav button:hover{background:var(--bg-card);color:var(--text-primary)}
+  .wb-nav button.active{background:rgba(0,242,254,.08);color:var(--accent-cyan)}
+  .wb-main{flex:1;padding:22px;overflow:auto}
+  .view{display:none}
+  .view.active{display:block}
+  h2{font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-primary);margin:0 0 4px}
+  .hint{color:var(--text-muted);font-size:12px;margin-bottom:18px}
+  .card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,select,textarea{background:#0b1220;border:1px solid #26324f;border-radius:6px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:var(--font-mono)}
+  textarea{width:100%;min-height:110px}
+  button.primary{background:var(--accent-cyan);border:none;color:#04202a;font-weight:600;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+  button.secondary{background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+  button.primary:hover{filter:brightness(1.1)}
+  table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--font-mono)}
+  th{text-align:left;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border-color)}
+  td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;word-break:break-all}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;letter-spacing:.06em;border:1px solid}
+  .pill.obs{color:var(--accent-emerald);border-color:var(--accent-emerald)}
+  .pill.calc{color:var(--accent-blue);border-color:var(--accent-blue)}
+  .pill.ext{color:var(--accent-purple);border-color:var(--accent-purple)}
+  .pill.unav{color:var(--text-muted);border-color:var(--text-muted)}
+  .pill.user{color:var(--accent-amber);border-color:var(--accent-amber)}
+  .pill.demo{color:var(--accent-rose);border-color:var(--accent-rose)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .kv{font-size:12px;color:var(--text-secondary);line-height:1.8;font-family:var(--font-mono)}
+  .kv b{color:var(--text-primary);font-weight:600}
+  .muted{color:var(--text-muted);font-size:12px}
+  .err{color:var(--accent-rose);font-size:12px;margin-top:8px}
+  .ok{color:var(--accent-emerald);font-size:12px;margin-top:8px}
+  pre{background:#0b1220;border:1px solid #26324f;border-radius:6px;padding:10px;overflow:auto;font-size:11px;font-family:var(--font-mono);max-height:320px}
+  .copy{background:none;border:1px solid var(--border-color);color:var(--text-muted);border-radius:4px;font-size:10px;padding:2px 6px;cursor:pointer;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wb-top">
+  <span class="brand">CYBERSECURITY ANALYST WORKBENCH</span>
+  <span class="muted" id="wb-user"></span>
+  <span class="spacer"></span>
+  <a href="/">Network Monitoring (NIDS)</a>
+  <button id="wb-logout">Sign out</button>
+</div>
+<div class="wb-shell">
+  <nav class="wb-nav">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="investigate">IOC Investigation</button>
+    <button data-view="logs">Log Analyzer</button>
+    <button data-view="files">File Analysis</button>
+    <button data-view="encode">Encode / Decode</button>
+    <button data-view="network">Network Tools</button>
+    <button data-view="cases">Investigation Cases</button>
+    <button data-view="reports">Reports</button>
+    <button data-view="providers">Intel Providers</button>
+    <button data-view="demo">Demo Data</button>
+  </nav>
+  <main class="wb-main">
+
+    <section id="view-dashboard" class="view active">
+      <h2>Dashboard</h2><div class="hint">Real application data only. No decorative metrics.</div>
+      <div id="dash-content"></div>
+    </section>
+
+    <section id="view-investigate" class="view">
+      <h2>IOC Investigation Center</h2>
+      <div class="hint">Enter an IP, URL, domain, or MD5/SHA1/SHA256/SHA512 hash. The type is detected automatically.</div>
+      <div class="card">
+        <div class="row">
+          <input id="ioc-input" style="flex:1;min-width:320px" placeholder="8.8.8.8  /  https://example.com/x  /  example.com  /  <hash>">
+          <button class="primary" id="ioc-run">Investigate</button>
+        </div>
+        <div class="muted" id="ioc-type" style="margin-top:8px"></div>
+        <div class="err" id="ioc-err"></div>
+      </div>
+      <div id="ioc-result"></div>
+      <div class="card">
+        <h2 style="font-size:13px">Recent investigations</h2>
+        <div id="ioc-recent"></div>
+      </div>
+    </section>
+
+    <section id="view-logs" class="view">
+      <h2>Log Analyzer</h2>
+      <div class="hint">Upload TXT / LOG / CSV / JSON. Files are streamed in chunks; large logs never load wholly into memory.</div>
+      <div class="card">
+        <div class="row">
+          <input type="file" id="log-file" accept=".txt,.log,.csv,.json">
+          <button class="primary" id="log-upload">Analyze log</button>
+        </div>
+        <div class="err" id="log-err"></div>
+      </div>
+      <div id="log-result"></div>
+    </section>
+
+    <section id="view-files" class="view">
+      <h2>File Analysis</h2>
+      <div class="hint">Hashes, entropy, strings and PE/ELF structure are computed locally. Files are never sent externally automatically.</div>
+      <div class="card">
+        <div class="row">
+          <input type="file" id="file-input">
+          <button class="primary" id="file-upload">Analyze file</button>
+        </div>
+        <div class="err" id="file-err"></div>
+      </div>
+      <div id="file-result"></div>
+    </section>
+
+    <section id="view-encode" class="view">
+      <h2>Encoding / Decoding</h2>
+      <div class="hint">Every operation is explicitly ENCODE or DECODE. Decoding is not a threat assessment.</div>
+      <div class="card">
+        <div class="row">
+          <select id="enc-op"><option value="decode">DECODE</option><option value="encode">ENCODE</option></select>
+          <select id="enc-codec">
+            <option>base64</option><option>url</option><option>hex</option><option>binary</option>
+            <option>rot13</option><option>html</option><option>unicode</option><option>jwt</option>
+          </select>
+          <button class="primary" id="enc-run">Run</button>
+        </div>
+        <textarea id="enc-input" style="margin-top:10px" placeholder="input"></textarea>
+        <div class="err" id="enc-err"></div>
+        <div style="margin-top:10px"><span class="muted">Output:</span><button class="copy" id="enc-copy">copy</button></div>
+        <pre id="enc-output"></pre>
+      </div>
+    </section>
+
+    <section id="view-network" class="view">
+      <h2>Network Tools</h2>
+      <div class="hint">OBSERVED (real DNS/resolver queries) vs CALCULATED (local math). No active port scanning.</div>
+      <div class="card">
+        <div class="row">
+          <input id="cidr-input" placeholder="192.168.1.0/24">
+          <button class="primary" id="cidr-run">CIDR analysis</button>
+        </div>
+        <pre id="cidr-out" style="margin-top:10px"></pre>
+      </div>
+      <div class="card">
+        <div class="row">
+          <input id="dns-name" placeholder="example.com">
+          <select id="dns-type"><option>A</option><option>AAAA</option><option>NS</option><option>MX</option><option>TXT</option><option>CNAME</option></select>
+          <button class="primary" id="dns-run">DNS lookup</button>
+          <input id="rdns-ip" placeholder="8.8.8.8 (reverse)">
+          <button class="secondary" id="rdns-run">Reverse DNS</button>
+        </div>
+        <pre id="dns-out" style="margin-top:10px"></pre>
+      </div>
+    </section>
+
+    <section id="view-cases" class="view">
+      <h2>Investigation Cases</h2>
+      <div class="hint">Keep an entire investigation together: indicators, files, logs, NIDS alerts, notes, timeline, report.</div>
+      <div class="card">
+        <div class="row">
+          <input id="case-title" placeholder="Case title" style="flex:1;min-width:240px">
+          <select id="case-priority"><option>LOW</option><option selected>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select>
+          <button class="primary" id="case-create">Create case</button>
+        </div>
+        <textarea id="case-desc" style="margin-top:10px" placeholder="Description / scope"></textarea>
+        <div class="err" id="case-err"></div>
+      </div>
+      <div id="case-list"></div>
+      <div id="case-detail"></div>
+    </section>
+
+    <section id="view-reports" class="view">
+      <h2>Reports</h2>
+      <div class="hint">Generated from persisted case evidence. PDF is primary; JSON preserves structure; CSV exports IOCs/events.</div>
+      <div id="report-list"></div>
+    </section>
+
+    <section id="view-providers" class="view">
+      <h2>Threat-Intelligence Providers</h2>
+      <div class="hint">Adapters are independent. A missing API key reports NOT CONFIGURED and never crashes the platform.</div>
+      <div id="provider-list"></div>
+    </section>
+
+    <section id="view-demo" class="view">
+      <h2>Demo Data</h2>
+      <div class="hint">Bundled sample data, strictly labeled. Never mixed with real analysis.</div>
+      <div class="card"><div class="row"><button class="primary" id="demo-seed">Seed demo case</button></div>
+      <div class="ok" id="demo-msg"></div></div>
+      <div id="demo-content"></div>
+    </section>
+
+  </main>
+</div>
+<script src="/js/workbench.js"></script>
+</body>
+</html>

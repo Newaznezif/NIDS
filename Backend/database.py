@@ -1,8 +1,9 @@
 import sqlite3
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 import os
-from .config import DB_PATH
+from .config import DB_PATH, ACTIVE_THREAT_WINDOW
 
 logger = logging.getLogger("NIDS.Database")
 
@@ -32,9 +33,24 @@ def init_db():
             destination_port INTEGER,
             protocol TEXT DEFAULT 'TCP',
             details TEXT,
-            status TEXT DEFAULT 'ACTIVE'
+            status TEXT DEFAULT 'ACTIVE',
+            asset_ip TEXT DEFAULT '',
+            evidence TEXT DEFAULT '{}',
+            first_seen REAL,
+            last_seen REAL
         )
     """)
+
+    # Migration: add asset-monitoring columns to databases created before this schema.
+    existing_cols = {row["name"] for row in cursor.execute("PRAGMA table_info(alerts)").fetchall()}
+    for col, ddl in (
+        ("asset_ip", "ALTER TABLE alerts ADD COLUMN asset_ip TEXT DEFAULT ''"),
+        ("evidence", "ALTER TABLE alerts ADD COLUMN evidence TEXT DEFAULT '{}'"),
+        ("first_seen", "ALTER TABLE alerts ADD COLUMN first_seen REAL"),
+        ("last_seen", "ALTER TABLE alerts ADD COLUMN last_seen REAL"),
+    ):
+        if col not in existing_cols:
+            cursor.execute(ddl)
 
     # Traffic Stats Table
     cursor.execute("""
@@ -67,6 +83,10 @@ def init_db():
     if cursor.fetchone()[0] == 0:
         cursor.execute("INSERT INTO traffic_stats (total_packets, total_bytes, total_alerts) VALUES (0, 0, 0)")
 
+    # Indexes for windowed/status queries used by the metrics endpoints.
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_alerts_timestamp ON alerts (timestamp)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts (status)")
+
     conn.commit()
     conn.close()
     logger.info("Database schema initialized successfully.")
@@ -78,8 +98,8 @@ def save_alert(alert_data):
     try:
         cursor.execute("""
             INSERT INTO alerts 
-            (timestamp, attack_type, severity, confidence, source_ip, destination_ip, source_port, destination_port, protocol, details, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (timestamp, attack_type, severity, confidence, source_ip, destination_ip, source_port, destination_port, protocol, details, status, asset_ip, evidence, first_seen, last_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             alert_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
             alert_data.get("attack_type", "UNKNOWN"),
@@ -91,7 +111,11 @@ def save_alert(alert_data):
             alert_data.get("destination_port", 0),
             alert_data.get("protocol", "TCP"),
             alert_data.get("details", ""),
-            alert_data.get("status", "ACTIVE")
+            alert_data.get("status", "ACTIVE"),
+            alert_data.get("asset_ip", ""),
+            json.dumps(alert_data.get("evidence", {}) or {}),
+            alert_data.get("first_seen"),
+            alert_data.get("last_seen"),
         ))
         alert_id = cursor.lastrowid
         
@@ -174,10 +198,78 @@ def get_all_alerts(limit=100, severity=None, attack_type=None):
     cursor.execute(query, tuple(params))
     rows = cursor.fetchall()
     conn.close()
+    return [_hydrate_alert(dict(row)) for row in rows]
+
+
+def _hydrate_alert(row: dict) -> dict:
+    """Parses the stored JSON evidence back into a dict for API consumers."""
+    try:
+        row["evidence"] = json.loads(row.get("evidence") or "{}")
+    except (TypeError, ValueError):
+        row["evidence"] = {}
+    return row
+
+
+def get_alert(alert_id: int):
+    """Returns a single alert by id, or None."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM alerts WHERE id = ?", (alert_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return _hydrate_alert(dict(row)) if row else None
+
+
+def resolve_alert(alert_id: int) -> bool:
+    """Marks an alert RESOLVED so it no longer counts as an active threat."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE alerts SET status = 'RESOLVED' WHERE id = ?", (alert_id,))
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"Error resolving alert {alert_id}: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+def _active_cutoff_iso(window_seconds: int = ACTIVE_THREAT_WINDOW) -> str:
+    """ISO-8601 UTC cutoff. Alerts with timestamp >= this are considered active.
+
+    Matches the format produced by Alert.timestamp (datetime.now(timezone.utc).isoformat()),
+    so lexicographic comparison is chronologically correct.
+    """
+    return (datetime.now(timezone.utc) - timedelta(seconds=window_seconds)).isoformat()
+
+
+def get_active_threats(limit=100, window_seconds: int = ACTIVE_THREAT_WINDOW):
+    """Returns unresolved alerts within the active-threat window (most recent first)."""
+    cutoff = _active_cutoff_iso(window_seconds)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM alerts WHERE timestamp >= ? AND status = 'ACTIVE' ORDER BY id DESC LIMIT ?",
+        (cutoff, limit),
+    )
+    rows = cursor.fetchall()
+    conn.close()
     return [dict(row) for row in rows]
 
+
 def get_stats():
-    """Retrieves cumulative and real-time dashboard analytics statistics."""
+    """Retrieves cumulative and real-time dashboard analytics statistics.
+
+    Metric definitions:
+      - total_packets/total_bytes/total_alerts: cumulative lifetime counters.
+      - total_attacks: total alert rows ever recorded (historical).
+      - active_threats: alert rows within the ACTIVE_THREAT_WINDOW (currently active),
+        distinguished from historical detections.
+      - detection_rate: total_alerts / total_packets over the lifetime, expressed as a
+        percentage. Denominator is every analyzed packet; numerator is deduplicated
+        alert events. Reported alongside its raw components for transparency.
+    """
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -188,11 +280,20 @@ def get_stats():
     total_bytes = stat_row["total_bytes"] if stat_row else 0
     total_alerts = stat_row["total_alerts"] if stat_row else 0
 
-    # Active threats (alerts with status ACTIVE)
-    cursor.execute("SELECT COUNT(*) FROM alerts WHERE status = 'ACTIVE'")
+    # Active threats: unresolved alerts within the configured recency window
+    cutoff = _active_cutoff_iso()
+    cursor.execute("SELECT COUNT(*) FROM alerts WHERE timestamp >= ? AND status = 'ACTIVE'", (cutoff,))
     active_threats = cursor.fetchone()[0]
 
-    # Total Attacks count
+    # Resolved alerts (explicitly marked RESOLVED)
+    cursor.execute("SELECT COUNT(*) FROM alerts WHERE status = 'RESOLVED'")
+    resolved_alerts = cursor.fetchone()[0]
+
+    # Historical alerts: older than the active window (regardless of status)
+    cursor.execute("SELECT COUNT(*) FROM alerts WHERE timestamp < ?", (cutoff,))
+    historical_alerts = cursor.fetchone()[0]
+
+    # Total Attacks count (historical detections)
     cursor.execute("SELECT COUNT(*) FROM alerts")
     total_attacks = cursor.fetchone()[0]
 
@@ -208,20 +309,29 @@ def get_stats():
     cursor.execute("SELECT source_ip, COUNT(*) as count FROM alerts GROUP BY source_ip ORDER BY count DESC LIMIT 5")
     top_attackers = [{"ip": row["source_ip"], "count": row["count"]} for row in cursor.fetchall()]
 
-    # Detection Rate calculation (Alerts / Total Packets or percentage)
-    detection_rate = round((total_alerts / max(total_packets, 1)) * 100, 2)
-
     conn.close()
+
+    # Detection rate: alerts per analyzed packet (lifetime). Units are explicit and the
+    # raw components are exposed so consumers can reinterpret if needed.
+    detection_rate_value = round((total_alerts / total_packets) * 100, 2) if total_packets else 0.0
+
     return {
         "total_packets": total_packets,
         "total_bytes": total_bytes,
         "total_alerts": total_alerts,
         "total_attacks": total_attacks,
+        "detections": total_attacks,
         "active_threats": active_threats,
-        "detection_rate": f"{detection_rate}%",
+        "active_alerts": active_threats,
+        "resolved_alerts": resolved_alerts,
+        "historical_alerts": historical_alerts,
+        "active_window_seconds": ACTIVE_THREAT_WINDOW,
+        "detection_rate": f"{detection_rate_value}%",
+        "detection_rate_value": detection_rate_value,
+        "detection_rate_definition": "total_alerts / total_packets (lifetime)",
         "attack_types": attack_types,
         "severity_distribution": severity_dist,
-        "top_attackers": top_attackers
+        "top_attackers": top_attackers,
     }
 
 def clear_all_data():

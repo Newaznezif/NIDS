@@ -72,6 +72,37 @@
             </div>
         </section>
 
+        <!-- Asset Monitoring Panel -->
+        <section class="control-bar">
+            <div class="control-title">
+                <i class="fa-solid fa-crosshairs"></i>
+                <span>ASSET IP MONITORING</span>
+            </div>
+            <div class="control-actions" style="flex-wrap: wrap; gap: 0.5rem;">
+                <label for="asset-ip-input" style="color: var(--text-muted); font-size: 0.8rem;">Asset IP:</label>
+                <input type="text" id="asset-ip-input" class="form-input" placeholder="192.168.1.50" style="width: 160px;" />
+                <label for="asset-mode-select" style="color: var(--text-muted); font-size: 0.8rem;">Monitoring:</label>
+                <select id="asset-mode-select" class="form-select" style="width: 130px;">
+                    <option value="BOTH" selected>BOTH</option>
+                    <option value="INBOUND">INBOUND (to)</option>
+                    <option value="OUTBOUND">OUTBOUND (from)</option>
+                </select>
+                <button id="btn-start-monitor" class="btn btn-primary">
+                    <i class="fa-solid fa-play"></i> START MONITORING
+                </button>
+                <button id="btn-stop-monitor" class="btn btn-secondary">
+                    <i class="fa-solid fa-stop"></i> STOP
+                </button>
+            </div>
+            <div class="control-actions" style="margin-top: 0.5rem; gap: 1.5rem; flex-wrap: wrap;">
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Monitored Asset: <strong id="monitor-asset" style="color: var(--accent-cyan);">none</strong></span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Capture Interface: <strong id="monitor-interface" style="color: var(--accent-cyan);">-</strong></span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Capture Status: <strong id="monitor-capture-state" style="color: var(--accent-emerald);">-</strong></span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Asset Packets: <strong id="monitor-asset-packets" style="color: var(--accent-cyan);">0</strong></span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">Flows: <strong id="monitor-flows" style="color: var(--accent-cyan);">0</strong></span>
+            </div>
+        </section>
+
         <!-- Metric Summary Cards -->
         <section class="metrics-grid">
 
@@ -89,7 +120,7 @@
                 <div class="card-info">
                     <span class="card-label">ACTIVE THREATS</span>
                     <h2 id="metric-active-threats" class="card-value">0</h2>
-                    <span class="card-sub">Unresolved high alerts</span>
+                    <span class="card-sub">Alerts in recent window</span>
                 </div>
             </div>
 
@@ -169,6 +200,9 @@
                     <span id="alerts-count-badge" class="badge">0 Events</span>
                 </div>
                 <div class="filter-group">
+                    <span class="badge" title="All events below are OBSERVED from captured packets. No external threat-intelligence enrichment is connected.">
+                        <i class="fa-solid fa-eye"></i> OBSERVED EVENTS ONLY — no external threat-intel enrichment connected
+                    </span>
                     <input type="text" id="alert-search" placeholder="Search IP, type or detail..." class="form-input">
                     <select id="severity-filter" class="form-select">
                         <option value="ALL">All Severities</option>
@@ -193,12 +227,14 @@
                             <th>PROTO</th>
                             <th>CONFIDENCE</th>
                             <th>STATUS</th>
+                            <th>ASSET</th>
+                            <th>EVIDENCE</th>
                             <th>DETAILS</th>
                         </tr>
                     </thead>
                     <tbody id="alerts-table-body">
                         <tr>
-                            <td colspan="10" class="empty-state">
+                            <td colspan="12" class="empty-state">
                                 <i class="fa-solid fa-shield-cat"></i>
                                 <p>No security alerts recorded yet. Click "Simulate Port Scan" to trigger the detection engine.</p>
                             </td>

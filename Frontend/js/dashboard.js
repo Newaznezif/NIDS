@@ -29,6 +29,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnRefresh = document.getElementById("btn-refresh");
     const btnClear = document.getElementById("btn-clear");
 
+    // Asset monitoring controls + status
+    const assetIpInput = document.getElementById("asset-ip-input");
+    const assetModeSelect = document.getElementById("asset-mode-select");
+    const btnStartMonitor = document.getElementById("btn-start-monitor");
+    const btnStopMonitor = document.getElementById("btn-stop-monitor");
+    const monitorAsset = document.getElementById("monitor-asset");
+    const monitorInterface = document.getElementById("monitor-interface");
+    const monitorCaptureState = document.getElementById("monitor-capture-state");
+    const monitorAssetPackets = document.getElementById("monitor-asset-packets");
+    const monitorFlows = document.getElementById("monitor-flows");
+
     // Global State
     let allAlerts = [];
     let socket = null;
@@ -42,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initCharts();
     fetchStats();
     fetchAlerts();
+    fetchMonitorStatus();
     setupSocket();
     setupEventListeners();
 
@@ -92,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
             pollingInterval = setInterval(() => {
                 fetchStats();
                 fetchAlerts(true); // silent fetch
+                fetchMonitorStatus();
             }, 3000);
         }
     }
@@ -115,9 +128,50 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
             allAlerts = data.alerts || [];
             renderAlertsTable();
-            updateChartsData();
+            updateTimelineChart(); // recent activity only; aggregates come from /api/stats
         } catch (err) {
             console.error("Error fetching alerts:", err);
+        }
+    }
+
+    async function fetchMonitorStatus() {
+        try {
+            const res = await fetch(`${API_BASE}/api/monitor/status`);
+            if (!res.ok) return;
+            const data = await res.json();
+            renderMonitorStatus(data);
+        } catch (err) {
+            console.error("Error fetching monitor status:", err);
+        }
+    }
+
+    function renderMonitorStatus(m) {
+        const asset = (m.asset && m.asset.asset_ip) || "none";
+        const mode = (m.asset && m.asset.mode) || "BOTH";
+        monitorAsset.textContent = (asset === "none") ? "none" : `${asset} (${mode})`;
+        monitorInterface.textContent = m.interface || "-";
+        monitorAssetPackets.textContent = (m.asset_packets_observed ?? 0).toLocaleString();
+        monitorFlows.textContent = (m.flows_total ?? 0).toLocaleString();
+
+        // Honest capture state: LIVE only while packets are actually arriving.
+        const state = m.capture_state || "UNKNOWN";
+        monitorCaptureState.textContent = state;
+        monitorCaptureState.style.color = (state === "LIVE") ? "var(--accent-emerald)" : "var(--accent-amber, #f59e0b)";
+        updateModeBadge(state, !!(m.asset && m.asset.enabled));
+    }
+
+    function updateModeBadge(state, assetEnabled) {
+        if (state === "LIVE" && assetEnabled) {
+            // Sensor is receiving packets AND an asset is actually scoped.
+            modeBadge.className = "status-pill status-live";
+            modeText.textContent = "LIVE MONITORING";
+        } else if (state === "LIVE") {
+            // Sensor is live but no asset is being monitored; do not claim asset monitoring.
+            modeBadge.className = "status-pill status-demo";
+            modeText.textContent = "CAPTURE LIVE";
+        } else {
+            modeBadge.className = "status-pill status-demo";
+            modeText.textContent = state; // NO_TRAFFIC / CAPTURE_ERROR / PERMISSION_DENIED / etc.
         }
     }
 
@@ -129,15 +183,12 @@ document.addEventListener("DOMContentLoaded", () => {
         metricPackets.textContent = (stats.total_packets ?? 0).toLocaleString();
         metricRate.textContent = stats.detection_rate ?? "0.0%";
 
-        // Update Mode Badge
-        const mode = (stats.mode || "DEMO").toUpperCase();
-        if (mode === "LIVE") {
-            modeBadge.className = "status-pill status-live";
-            modeText.textContent = "LIVE MONITORING";
-        } else {
-            modeBadge.className = "status-pill status-demo";
-            modeText.textContent = `DEMO MODE (${stats.sniffer_status?.mode || "SIMULATED"})`;
-        }
+        // Aggregate charts reflect the FULL database via get_stats(), keeping them
+        // consistent with the metric cards (the alert feed is capped at the last 100).
+        updateAggregateCharts(stats);
+
+        // Capture-state badge reflects the honest capture state, not a static LIVE/DEMO.
+        updateModeBadge(stats.capture_state || stats.mode || "UNKNOWN", !!(stats.asset && stats.asset.enabled));
     }
 
     function onNewAlertReceived(alert) {
@@ -155,11 +206,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const severityFilter = severityFilterSelect.value;
 
         const filtered = allAlerts.filter(alert => {
-            const matchesSearch = 
+            const matchesSearch =
                 !searchTerm ||
-                alert.source_ip.toLowerCase().includes(searchTerm) ||
-                alert.destination_ip.toLowerCase().includes(searchTerm) ||
-                alert.attack_type.toLowerCase().includes(searchTerm) ||
+                (alert.source_ip || '').toLowerCase().includes(searchTerm) ||
+                (alert.destination_ip || '').toLowerCase().includes(searchTerm) ||
+                (alert.attack_type || '').toLowerCase().includes(searchTerm) ||
                 (alert.details && alert.details.toLowerCase().includes(searchTerm));
 
             const matchesSeverity = (severityFilter === "ALL") || (alert.severity === severityFilter);
@@ -170,11 +221,14 @@ document.addEventListener("DOMContentLoaded", () => {
         alertsCountBadge.textContent = `${filtered.length} Events`;
 
         if (filtered.length === 0) {
+            const emptyMsg = (allAlerts.length === 0)
+                ? 'No security alerts recorded yet. Live traffic is being monitored; use the panel above to simulate an attack.'
+                : 'No security alerts match the current filter.';
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="empty-state">
+                    <td colspan="12" class="empty-state">
                         <i class="fa-solid fa-shield-cat"></i>
-                        <p>No security alerts match the current filter.</p>
+                        <p>${emptyMsg}</p>
                     </td>
                 </tr>
             `;
@@ -184,22 +238,47 @@ document.addEventListener("DOMContentLoaded", () => {
         tableBody.innerHTML = filtered.map(alert => {
             const sevClass = getSeverityBadgeClass(alert.severity);
             const formattedTime = formatTimestamp(alert.timestamp);
+            const srcIp = escapeHtml(alert.source_ip || '');
+            const dstIp = escapeHtml(alert.destination_ip || '');
+            const attackType = escapeHtml(alert.attack_type || '');
+            const protocol = escapeHtml(alert.protocol || 'TCP');
+            const status = escapeHtml(alert.status || 'ACTIVE');
+            const severity = escapeHtml(alert.severity || '');
+            const rawTs = escapeHtml(alert.timestamp || '');
+            const assetIp = escapeHtml(alert.asset_ip || '-');
+            const evidence = escapeHtml(formatEvidence(alert.evidence));
 
             return `
                 <tr>
                     <td class="mono-cell">#${alert.id || '-'}</td>
-                    <td class="mono-cell" title="${alert.timestamp}">${formattedTime}</td>
-                    <td><span class="severity-badge ${sevClass}">${alert.severity}</span></td>
-                    <td style="font-weight: 600; color: #f8fafc;">${alert.attack_type}</td>
-                    <td class="mono-cell">${alert.source_ip}${alert.source_port ? ':' + alert.source_port : ''}</td>
-                    <td class="mono-cell">${alert.destination_ip}${alert.destination_port ? ':' + alert.destination_port : ''}</td>
-                    <td class="mono-cell">${alert.protocol || 'TCP'}</td>
+                    <td class="mono-cell" title="${rawTs}">${escapeHtml(formattedTime)}</td>
+                    <td><span class="severity-badge ${sevClass}">${severity}</span></td>
+                    <td style="font-weight: 600; color: #f8fafc;">${attackType}</td>
+                    <td class="mono-cell">${srcIp}${alert.source_port ? ':' + escapeHtml(alert.source_port) : ''}</td>
+                    <td class="mono-cell">${dstIp}${alert.destination_port ? ':' + escapeHtml(alert.destination_port) : ''}</td>
+                    <td class="mono-cell">${protocol}</td>
                     <td class="mono-cell">${Math.round((alert.confidence || 0.9) * 100)}%</td>
-                    <td><span style="color: var(--accent-emerald); font-weight: 600; font-size: 0.75rem;">${alert.status || 'ACTIVE'}</span></td>
+                    <td><span style="color: var(--accent-emerald); font-weight: 600; font-size: 0.75rem;">${status}</span></td>
+                    <td class="mono-cell">${assetIp}</td>
+                    <td class="mono-cell" style="font-size: 0.72rem;" title="${evidence}">${evidence}</td>
                     <td style="max-width: 250px; font-size: 0.78rem;" title="${escapeHtml(alert.details || '')}">${escapeHtml(alert.details || 'N/A')}</td>
                 </tr>
             `;
         }).join("");
+    }
+
+    function formatEvidence(ev) {
+        if (!ev || typeof ev !== 'object') return '-';
+        const parts = [];
+        if (ev.unique_ports !== undefined) parts.push(`ports=${ev.unique_ports}`);
+        if (Array.isArray(ev.ports) && ev.ports.length) parts.push(`[${ev.ports.slice(0, 8).join(',')}${ev.ports.length > 8 ? '…' : ''}]`);
+        if (ev.syn_count !== undefined) parts.push(`syn=${ev.syn_count}`);
+        if (ev.packet_count !== undefined) parts.push(`pkts=${ev.packet_count}`);
+        if (ev.observed_rate_per_sec !== undefined) parts.push(`rate=${ev.observed_rate_per_sec}/s`);
+        if (ev.window_seconds !== undefined) parts.push(`win=${ev.window_seconds}s`);
+        if (ev.threshold !== undefined) parts.push(`thr=${ev.threshold}`);
+        if (ev.reason) parts.push(ev.reason);
+        return parts.length ? parts.join(' ') : '-';
     }
 
     function getSeverityBadgeClass(sev) {
@@ -332,48 +411,36 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function updateChartsData() {
-        if (!allAlerts) return;
+    // Aggregate charts are sourced from /api/stats (full DB), never fabricated.
+    function updateAggregateCharts(stats) {
+        if (!stats) return;
 
-        // 1. Attack Types Breakdown
-        const typeCounts = {};
-        const sevCounts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
-        const ipCounts = {};
-
-        allAlerts.forEach(alert => {
-            // Types
-            typeCounts[alert.attack_type] = (typeCounts[alert.attack_type] || 0) + 1;
-            // Severity
-            if (sevCounts.hasOwnProperty(alert.severity)) {
-                sevCounts[alert.severity]++;
-            }
-            // IPs
-            ipCounts[alert.source_ip] = (ipCounts[alert.source_ip] || 0) + 1;
-        });
-
-        // Update Doughnut Chart
-        typesChart.data.labels = Object.keys(typeCounts);
-        typesChart.data.datasets[0].data = Object.values(typeCounts);
+        // 1. Attack Categories (doughnut) — from stats.attack_types
+        const typeEntries = Object.entries(stats.attack_types || {});
+        typesChart.data.labels = typeEntries.map(e => e[0]);
+        typesChart.data.datasets[0].data = typeEntries.map(e => e[1]);
         typesChart.update();
 
-        // Update Severity Bar Chart
+        // 2. Severity Breakdown (bar) — from stats.severity_distribution
+        const sev = stats.severity_distribution || {};
         severityChart.data.datasets[0].data = [
-            sevCounts.CRITICAL,
-            sevCounts.HIGH,
-            sevCounts.MEDIUM,
-            sevCounts.LOW
+            sev.CRITICAL || 0,
+            sev.HIGH || 0,
+            sev.MEDIUM || 0,
+            sev.LOW || 0
         ];
         severityChart.update();
 
-        // Update Top Attackers Chart
-        const sortedIPs = Object.entries(ipCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-        topAttackersChart.data.labels = sortedIPs.map(item => item[0]);
-        topAttackersChart.data.datasets[0].data = sortedIPs.map(item => item[1]);
+        // 3. Top Attacker IPs (horizontal bar) — from stats.top_attackers
+        const attackers = stats.top_attackers || [];
+        topAttackersChart.data.labels = attackers.map(a => a.ip);
+        topAttackersChart.data.datasets[0].data = attackers.map(a => a.count);
         topAttackersChart.update();
+    }
 
-        // Update Timeline Chart (Grouped by minute)
+    // Timeline reflects recent alert activity (last fetched window of alerts).
+    function updateTimelineChart() {
+        if (!allAlerts) return;
         const timeBucket = {};
         allAlerts.slice().reverse().forEach(alert => {
             const timeStr = formatTimestamp(alert.timestamp);
@@ -453,5 +520,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
         alertSearchInput.addEventListener("input", renderAlertsTable);
         severityFilterSelect.addEventListener("change", renderAlertsTable);
+
+        btnStartMonitor.addEventListener("click", async () => {
+            const assetIp = assetIpInput.value.trim();
+            const mode = assetModeSelect.value;
+            if (!assetIp) { alert("Enter an Asset IP to monitor."); return; }
+            btnStartMonitor.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/api/monitor/start`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ asset_ip: assetIp, mode })
+                });
+                const data = await res.json();
+                if (!res.ok) { alert("Failed to start monitoring: " + (data.error || res.status)); return; }
+                await fetchMonitorStatus();
+                await fetchStats();
+            } catch (err) {
+                alert("Failed to start monitoring: " + err.message);
+            } finally {
+                btnStartMonitor.disabled = false;
+            }
+        });
+
+        btnStopMonitor.addEventListener("click", async () => {
+            try {
+                await fetch(`${API_BASE}/api/monitor/stop`, { method: "POST" });
+                await fetchMonitorStatus();
+            } catch (err) {
+                alert("Failed to stop monitoring: " + err.message);
+            }
+        });
     }
 });

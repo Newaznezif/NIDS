@@ -29,6 +29,8 @@ class PacketAnalyzer:
             protocol = "OTHER"
             length = len(scapy_pkt)
             flags = ""
+            # Interface the packet was captured on (set by scapy sniff()).
+            interface = str(getattr(scapy_pkt, "sniffed_on", "") or "")
 
             # Check IP Layer
             if scapy_pkt.haslayer(IP):
@@ -73,7 +75,8 @@ class PacketAnalyzer:
                 protocol=protocol,
                 timestamp=time.time(),
                 length=length,
-                flags=flags
+                flags=flags,
+                interface=interface
             )
 
         except Exception as e:
@@ -91,5 +94,6 @@ class PacketAnalyzer:
             protocol=data.get("protocol", "TCP"),
             timestamp=data.get("timestamp", time.time()),
             length=data.get("length", 64),
-            flags=data.get("flags", "S")
+            flags=data.get("flags", "S"),
+            interface=data.get("interface", "")
         )
