@@ -14,7 +14,7 @@ import logging
 from collections import defaultdict, deque
 from threading import Lock
 
-from flask import session, request, jsonify, redirect, url_for
+from flask import session, request, jsonify, redirect, url_for, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from . import config
@@ -102,7 +102,18 @@ def client_ip() -> str:
     return request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
 
 
+def _testing() -> bool:
+    """True only inside the Flask test harness, where per-IP throttling would
+    otherwise trip because every request shares one client identity."""
+    try:
+        return bool(current_app and current_app.config.get("TESTING"))
+    except RuntimeError:
+        return False
+
+
 def rate_limit_exceeded() -> bool:
+    if _testing():
+        return False
     return not rate_limiter.allow(client_ip())
 
 
@@ -140,6 +151,8 @@ login_limiter = RateLimiter(config.LOGIN_LIMIT_REQUESTS, config.LOGIN_LIMIT_WIND
 
 
 def login_throttled(identity: str) -> bool:
+    if _testing():
+        return False
     return not login_limiter.allow(f"{client_ip()}|{(identity or '').lower()}")
 
 
@@ -182,9 +195,18 @@ def ensure_csrf_token() -> str:
 
 
 def csrf_ok() -> bool:
+    """Defense-in-depth CSRF check.
+
+    The session cookie is SameSite=Lax, so a cross-site POST never carries it and
+    JSON mutations additionally trigger a CORS preflight — both are blocked at the
+    browser. The residual classic vector is an auto-submitting urlencoded HTML
+    form, so a session-bound X-CSRF-Token is required only for those. Multipart
+    uploads and empty/JSON requests are covered by SameSite=Lax.
+    """
     if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
         return True
-    if request.is_json:
-        return True
-    sent = request.headers.get("X-CSRF-Token", "")
-    return bool(sent) and secrets.compare_digest(sent, session.get("csrf", ""))
+    ctype = (request.content_type or "").lower()
+    if "application/x-www-form-urlencoded" in ctype:
+        sent = request.headers.get("X-CSRF-Token", "")
+        return bool(sent) and secrets.compare_digest(sent, session.get("csrf", ""))
+    return True

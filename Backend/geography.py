@@ -7,7 +7,6 @@ and the map simply does not show the artifact.
 The intensity scale represents INVESTIGATION ACTIVITY (how often artifacts in
 that area were investigated), never maliciousness or country risk.
 """
-import json
 import logging
 from datetime import datetime, timezone
 
