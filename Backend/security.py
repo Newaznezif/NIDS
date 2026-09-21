@@ -6,6 +6,9 @@ requests with 401. The legacy NIDS monitoring API is intentionally left open
 for local/lab use (see README) so existing integrations keep working.
 """
 import time
+import re
+import secrets
+import hashlib
 import functools
 import logging
 from collections import defaultdict, deque
@@ -18,6 +21,22 @@ from . import config
 from . import platform_db
 
 logger = logging.getLogger("NIDS.Security")
+
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
+
+def valid_email(email: str) -> bool:
+    return bool(EMAIL_RE.match(email or ""))
+
+
+def password_policy_error(password: str):
+    """Return a human-readable policy violation, or None when acceptable."""
+    pw = password or ""
+    if len(pw) < config.MIN_PASSWORD_LENGTH:
+        return f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters."
+    if not re.search(r"[A-Za-z]", pw) or not re.search(r"[0-9]", pw):
+        return "Password must contain at least one letter and one digit."
+    return None
 
 
 def hash_password(password: str) -> str:
@@ -113,3 +132,59 @@ def audit_event(event: str, detail: str = ""):
         platform_db.audit(current_user() or "anonymous", event, detail, client_ip())
     except Exception as e:  # auditing must never break the request path
         logger.debug(f"Audit write failed: {e}")
+
+
+# --- credential-submission throttle (per client IP + identity) ---
+
+login_limiter = RateLimiter(config.LOGIN_LIMIT_REQUESTS, config.LOGIN_LIMIT_WINDOW)
+
+
+def login_throttled(identity: str) -> bool:
+    return not login_limiter.allow(f"{client_ip()}|{(identity or '').lower()}")
+
+
+# --- session cookie hardening ---
+
+def apply_cookie_settings(app):
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE=config.COOKIE_SAMESITE,
+        SESSION_COOKIE_SECURE=config.COOKIE_SECURE,
+    )
+
+
+# --- password reset tokens (stored hashed, single-use, short-lived) ---
+
+def issue_reset_token(user_id: int):
+    token = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    expires = time.time() + config.PASSWORD_RESET_TTL_SECONDS
+    platform_db.create_reset_token(user_id, digest, expires)
+    return token
+
+
+def consume_reset_token(token: str):
+    if not token:
+        return None
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    return platform_db.consume_reset_token(digest, time.time())
+
+
+# --- CSRF ---
+# Mutation endpoints accept JSON only from the SPA; cross-site JSON POSTs carrying
+# our session cookie are blocked by SameSite=Lax plus CORS without credentials.
+# Form-encoded mutations additionally require a session-bound token.
+
+def ensure_csrf_token() -> str:
+    if not session.get("csrf"):
+        session["csrf"] = secrets.token_urlsafe(24)
+    return session["csrf"]
+
+
+def csrf_ok() -> bool:
+    if request.method not in ("POST", "PUT", "PATCH", "DELETE"):
+        return True
+    if request.is_json:
+        return True
+    sent = request.headers.get("X-CSRF-Token", "")
+    return bool(sent) and secrets.compare_digest(sent, session.get("csrf", ""))

@@ -13,36 +13,136 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+  let CSRF = "";
+
   async function api(path, opts) {
-    const res = await fetch(path, Object.assign({
-      headers: { "Accept": "application/json" },
-    }, opts));
+    const headers = { "Accept": "application/json" };
+    if (CSRF) headers["X-CSRF-Token"] = CSRF;
+    const res = await fetch(path, Object.assign({ headers }, opts));
     if (res.status === 401) { location.href = "/login"; throw new Error("auth"); }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
     return data;
   }
-  const post = (path, body) => api(path, {
-    method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(body || {}),
-  });
+  const post = (path, body) => {
+    const headers = { "Content-Type": "application/json", "Accept": "application/json" };
+    if (CSRF) headers["X-CSRF-Token"] = CSRF;
+    return api(path, { method: "POST", headers, body: JSON.stringify(body || {}) });
+  };
 
   /* ---- session / nav ---- */
+  let SESSION = {};
+
+  function switchView(name) {
+    document.querySelectorAll(".wb-nav button").forEach((x) =>
+      x.classList.toggle("active", x.dataset.view === name));
+    document.querySelectorAll(".view").forEach((x) => x.classList.remove("active"));
+    const v = $("view-" + name);
+    if (v) v.classList.add("active");
+    loadView(name);
+  }
+
   async function boot() {
     const s = await api("/api/wb/session");
     if (!s.authenticated) { location.href = "/login"; return; }
-    $("wb-user").textContent = "signed in as " + s.user;
-    document.querySelectorAll(".wb-nav button").forEach((b) => {
-      b.onclick = () => {
-        document.querySelectorAll(".wb-nav button").forEach((x) => x.classList.remove("active"));
-        document.querySelectorAll(".view").forEach((x) => x.classList.remove("active"));
-        b.classList.add("active");
-        $("view-" + b.dataset.view).classList.add("active");
-        loadView(b.dataset.view);
-      };
+    SESSION = s;
+    CSRF = s.csrf_token || "";
+    // Appearance: honour the per-user preference (falls back to localStorage/system).
+    if (window.NIDSTheme) { NIDSTheme.init(); if (s.theme) NIDSTheme.apply(s.theme); }
+    renderUserChip(s);
+    bindUserMenu();
+    bindModals();
+    document.querySelectorAll(".wb-nav button").forEach((b) => { b.onclick = () => switchView(b.dataset.view); });
+    loadView("dashboard");
+  }
+
+  function initials(name) {
+    const parts = String(name || "").trim().split(/[\s@._-]+/).filter(Boolean);
+    if (!parts.length) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  function renderUserChip(s) {
+    const name = s.display_name || s.user || "Account";
+    $("wb-user-name").textContent = name;
+    $("wb-avatar").textContent = initials(name);
+  }
+
+  function bindUserMenu() {
+    const chip = $("wb-user-chip"), menu = $("wb-user-menu");
+    const close = () => { menu.classList.remove("open"); chip.setAttribute("aria-expanded", "false"); };
+    chip.onclick = (e) => {
+      e.stopPropagation();
+      const open = menu.classList.toggle("open");
+      chip.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    document.addEventListener("click", (e) => { if (!menu.contains(e.target)) close(); });
+    menu.querySelectorAll("[data-modal]").forEach((b) => {
+      b.onclick = () => { close(); openModal(b.dataset.modal); };
     });
     $("wb-logout").onclick = async () => { await post("/api/wb/logout"); location.href = "/login"; };
-    loadView("dashboard");
+  }
+
+  function openModal(name) {
+    const el = $("modal-" + name);
+    if (!el) return;
+    if (name === "profile") fillProfile();
+    if (name === "appearance") fillAppearance();
+    if (name === "security") fillSecurity();
+    el.classList.add("open");
+    el.querySelectorAll("[data-close]").forEach((b) => { b.onclick = () => el.classList.remove("open"); });
+    el.onclick = (e) => { if (e.target === el) el.classList.remove("open"); };
+  }
+  function bindModals() {
+    $("pf-save").onclick = async () => {
+      $("pf-err").textContent = ""; $("pf-ok").textContent = "";
+      try {
+        await post("/api/wb/profile", { display_name: $("pf-name").value.trim() });
+        const s = await api("/api/wb/session"); SESSION = s; renderUserChip(s);
+        $("pf-ok").textContent = "Saved.";
+      } catch (e) { $("pf-err").textContent = e.message; }
+    };
+    document.querySelectorAll('input[name="theme"]').forEach((r) => {
+      r.onchange = async () => {
+        const mode = r.value;
+        if (window.NIDSTheme) NIDSTheme.set(mode, (m) => { post("/api/wb/appearance", { theme: m }).catch(() => {}); });
+        $("ap-ok").textContent = "Applied " + mode + " theme.";
+        loadView(currentView());
+      };
+    });
+    $("sec-save").onclick = async () => {
+      $("sec-err").textContent = ""; $("sec-ok").textContent = "";
+      try {
+        await post("/api/wb/profile/password", {
+          current_password: $("sec-cur").value, new_password: $("sec-new").value,
+        });
+        $("sec-cur").value = ""; $("sec-new").value = "";
+        $("sec-ok").textContent = "Password updated.";
+      } catch (e) { $("sec-err").textContent = e.message; }
+    };
+  }
+  function fillProfile() {
+    $("pf-name").value = SESSION.display_name || "";
+    $("pf-email").value = SESSION.email || "(not set)";
+    $("pf-provider").value = (SESSION.auth_provider === "google") ? "Google" : "Email + password";
+    $("pf-err").textContent = ""; $("pf-ok").textContent = "";
+  }
+  function fillAppearance() {
+    const mode = (window.NIDSTheme && NIDSTheme.current()) || SESSION.theme || "system";
+    document.querySelectorAll('input[name="theme"]').forEach((r) => { r.checked = (r.value === mode); });
+    $("ap-ok").textContent = "";
+  }
+  function fillSecurity() {
+    $("sec-err").textContent = ""; $("sec-ok").textContent = "";
+    const google = SESSION.auth_provider === "google";
+    $("sec-body").querySelectorAll("input").forEach((i) => { i.disabled = google; });
+    $("sec-save").disabled = google;
+    if (google) $("sec-err").textContent = "This account signs in with Google; the password is managed by Google.";
+  }
+  function currentView() {
+    const active = document.querySelector(".wb-nav button.active");
+    return active ? active.dataset.view : "dashboard";
   }
 
   function loadView(v) {
@@ -84,12 +184,14 @@
     ];
     let html = "<div class='grid'>" + cards.map(([k, v]) =>
       `<div class='card'><div class='muted'>${k}</div><div style='font-size:22px;font-family:var(--font-mono)'>${v}</div></div>`).join("") + "</div>";
-    html += "<div class='card'><h2 style='font-size:13px'>Active investigations</h2>" +
-      table(["Case", "Title", "Status", "Priority", "Analyst"],
-        d.active_cases.map((c) => [esc(c.case_id), esc(c.title), esc(c.status), esc(c.priority), esc(c.analyst)])) + "</div>";
+    // Investigation Geography (prominent, directly under the overview stats)
+    html += "<div class='geo-card' id='geo-host'></div>";
     html += "<div class='card'><h2 style='font-size:13px'>Recent investigations</h2>" +
       table(["Type", "Indicator", "When"], d.recent_investigations.map((i) =>
         [esc(i.ioc_type), esc(i.ioc_value), esc(i.created_at)])) + "</div>";
+    html += "<div class='card'><h2 style='font-size:13px'>Active investigations</h2>" +
+      table(["Case", "Title", "Status", "Priority", "Analyst"],
+        d.active_cases.map((c) => [esc(c.case_id), esc(c.title), esc(c.status), esc(c.priority), esc(c.analyst)])) + "</div>";
     html += "<div class='card'><h2 style='font-size:13px'>Intel provider status</h2>" +
       table(["Provider", "Status", "Supports"], d.providers.map((p) =>
         [esc(p.provider), pill(p.status === "CONFIGURED" ? "EXTERNAL INTELLIGENCE" : "UNAVAILABLE") + " " + esc(p.status), esc((p.supports || []).join(", "))])) + "</div>";
@@ -97,6 +199,16 @@
       table(["When", "User", "Event", "Detail"], d.analysis_activity.map((a) =>
         [esc(a.ts), esc(a.username), esc(a.event), esc(a.detail)])) + "</div>";
     $("dash-content").innerHTML = html;
+    const host = $("geo-host");
+    if (host && window.NIDSGeoMap) {
+      NIDSGeoMap.render(host, {
+        onInvestigate: (ip) => {
+          switchView("investigate");
+          $("ioc-input").value = ip;
+          $("ioc-run").click();
+        },
+      });
+    }
   }
 
   /* ---- investigate ---- */

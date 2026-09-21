@@ -5,6 +5,8 @@ and audited. The legacy NIDS /api/* endpoints are unchanged.
 """
 import os
 import re
+import secrets
+import logging
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request, session, send_from_directory, redirect, url_for, render_template_string
@@ -13,46 +15,107 @@ from . import config, platform_db, security
 from . import ioc_engine, encoding_tools, network_tools
 from . import analysis_ip, analysis_url, analysis_domain, analysis_hash
 from . import file_analysis, log_analysis, reports, demo_data, providers
+from . import google_oauth, mail, geography
+
+logger = logging.getLogger("NIDS.Workbench")
 
 wb = Blueprint("workbench", __name__)
 
-LOGIN_PAGE = """<!doctype html><html><head><meta charset="utf-8">
-<title>Analyst Workbench - Login</title>
+THEME_BOOTSTRAP = """<script>(function(){var t='system';try{t=localStorage.getItem('wb-theme')||'system'}catch(e){}
+var dark=t==='dark'||(t!=='light'&&!(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches));
+document.documentElement.setAttribute('data-theme',dark?'dark':'light');})();</script>"""
+
+LOGO_SVG = """<svg class="logo" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+<rect x="4" y="4" width="56" height="56" rx="14" fill="var(--accent-cyan,#0e7490)"/>
+<path d="M32 14 L46 20 V32 C46 41 40 47 32 50 C24 47 18 41 18 32 V20 Z" fill="none" stroke="#04121a" stroke-width="4" stroke-linejoin="round"/>
+<path d="M25 32 l5 5 l10 -11" fill="none" stroke="#04121a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>"""
+
+AUTH_PAGE = """<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }} &middot; Cybersecurity Analyst Workbench</title>
+<link rel="stylesheet" href="/css/style.css">
+""" + THEME_BOOTSTRAP + """
 <style>
-body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#0b1220;color:#e5e7eb;
-display:flex;align-items:center;justify-content:center;min-height:100vh}
-.card{background:#111a2e;border:1px solid #1f2a44;border-radius:10px;padding:36px;width:380px}
-h1{font-size:20px;margin:0 0 4px} .sub{color:#8b98b8;font-size:12px;margin-bottom:24px}
-label{display:block;font-size:11px;letter-spacing:.08em;color:#8b98b8;margin:14px 0 6px;text-transform:uppercase}
-input{width:100%;box-sizing:border-box;background:#0b1220;border:1px solid #26324f;border-radius:6px;
-color:#e5e7eb;padding:10px 12px;font-size:14px}
-button{margin-top:22px;width:100%;background:#0e7490;border:none;color:#fff;padding:12px;
-border-radius:6px;font-size:14px;cursor:pointer}
-button:hover{background:#0891b2}
-.err{color:#f87171;font-size:12px;margin-top:12px;min-height:16px}
-.feat{margin-top:26px;border-top:1px solid #1f2a44;padding-top:16px;font-size:12px;color:#8b98b8;line-height:1.7}
-</style></head><body><div class="card">
-<h1>Cybersecurity Analyst Workbench</h1>
-<div class="sub">Real evidence &middot; traceable results &middot; professional reporting</div>
-<form method="post" action="/api/wb/login">
-<label>Username</label><input name="username" autocomplete="username" required>
-<label>Password</label><input name="password" type="password" autocomplete="current-password" required>
-<button type="submit">Sign in</button>
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:var(--bg-dark);color:var(--text-primary);font-family:var(--font-sans)}
+.auth-card{width:100%;max-width:400px;background:var(--bg-card);border:1px solid var(--border-color);
+  border-radius:14px;padding:34px 32px}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.auth-brand .name{font-size:15px;font-weight:600;letter-spacing:.02em}
+.auth-card h1{font-size:21px;margin:18px 0 4px;letter-spacing:-.01em}
+.auth-sub{color:var(--text-secondary);font-size:13px;margin-bottom:22px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-secondary);margin-bottom:6px}
+.field input{width:100%;background:var(--bg-input);border:1px solid var(--border-input);border-radius:8px;
+  color:var(--text-primary);padding:10px 12px;font-size:14px;font-family:var(--font-sans)}
+.field input:focus{outline:none;border-color:var(--accent-cyan)}
+.btn-primary{width:100%;background:var(--accent-cyan);border:none;color:#04121a;font-weight:600;
+  padding:11px;border-radius:8px;font-size:14px;cursor:pointer;margin-top:6px}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--bg-input);border:1px solid var(--border-input);color:var(--text-primary);
+  padding:10px;border-radius:8px;font-size:14px;cursor:pointer;text-decoration:none}
+.btn-google:hover{border-color:var(--border-bright)}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:11px;
+  text-transform:uppercase;letter-spacing:.08em;margin:18px 0}
+.divider:before,.divider:after{content:"";flex:1;height:1px;background:var(--border-color)}
+.err{color:var(--sev-high);font-size:12.5px;margin-top:12px;min-height:16px}
+.ok{color:var(--sev-low);font-size:12.5px;margin-top:12px}
+.links{margin-top:18px;display:flex;justify-content:space-between;font-size:12.5px}
+.links a{color:var(--accent-cyan);text-decoration:none}
+.links a:hover{text-decoration:underline}
+.note{margin-top:20px;padding-top:14px;border-top:1px solid var(--border-color);
+  color:var(--text-muted);font-size:11.5px;line-height:1.6}
+.google-off{margin-top:10px;color:var(--text-muted);font-size:11.5px}
+</style></head><body><div class="auth-wrap"><div class="auth-card">
+<div class="auth-brand">""" + LOGO_SVG + """<span class="name">Cybersecurity Analyst Workbench</span></div>
+<h1>{{ heading }}</h1>
+<div class="auth-sub">{{ subtext }}</div>
+<form method="post" action="{{ action }}">
+{{ fields }}
+<button class="btn-primary" type="submit">{{ submit }}</button>
 <div class="err">{{ error }}</div>
+<div class="ok">{{ notice }}</div>
 </form>
-<div class="feat">
-IOC investigation &middot; threat-intelligence lookups &middot; log &amp; file analysis &middot;
-IOC extraction &middot; encoding tools &middot; network analysis &middot; investigation cases &middot;
-evidence timeline &middot; PDF/JSON/CSV reporting &middot; integrated NIDS network monitoring.
-<br><br>No result is ever fabricated. Unconfigured sources report NOT CONFIGURED.
-</div>
-</div></body></html>"""
+{{ google_block }}
+<div class="links">{{ links }}</div>
+<div class="note">Real evidence &middot; traceable results &middot; professional reporting.
+No result is ever fabricated; unconfigured sources report NOT CONFIGURED.</div>
+</div></div></body></html>"""
+
+
+def _field(name, label, type="text", autocomplete="", value=""):
+    return (f'<div class="field"><label for="{name}">{label}</label>'
+            f'<input id="{name}" name="{name}" type="{type}" autocomplete="{autocomplete}" '
+            f'value="{value}" required></div>')
+
+
+def _render_auth(title, heading, subtext, action, fields, submit, links,
+                 error="", notice="", google_block=""):
+    return render_template_string(
+        AUTH_PAGE, title=title, heading=heading, subtext=subtext, action=action,
+        fields=fields, submit=submit, links=links, error=error, notice=notice,
+        google_block=google_block)
+
+
+def _google_block():
+    if google_oauth.configured():
+        return ('<div class="divider">or</div>'
+                '<a class="btn-google" href="/api/wb/auth/google">'
+                '<svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9c4.5-4.1 7.1-10.2 7.1-17.6z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.7-3-.7-4.6s.3-3.2.7-4.6l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.6-5.9c-2.1 1.4-4.8 2.3-7.6 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>'
+                'Continue with Google</a>')
+    return ('<div class="google-off">Google sign-in is not configured on this server. '
+            'Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI to enable it.</div>')
 
 
 @wb.before_request
 def _guard():
     if security.rate_limit_exceeded():
         return jsonify({"error": "Rate limit exceeded. Slow down."}), 429
+    if session.get("user") and not security.csrf_ok():
+        return jsonify({"error": "CSRF token missing or invalid."}), 403
 
 
 # --- pages ---
@@ -61,7 +124,51 @@ def _guard():
 def login_page():
     if session.get("user"):
         return redirect(url_for("workbench.workbench_page"))
-    return render_template_string(LOGIN_PAGE, error="")
+    return _render_auth(
+        "Login", "Welcome back", "Sign in to continue to your workspace.",
+        "/api/wb/login",
+        _field("username", "Email or username", "text", "username") +
+        _field("password", "Password", "password", "current-password"),
+        "Login",
+        '<a href="/signup">Create account</a><a href="/forgot">Forgot password?</a>',
+        google_block=_google_block())
+
+
+@wb.route("/signup", methods=["GET"])
+def signup_page():
+    if session.get("user"):
+        return redirect(url_for("workbench.workbench_page"))
+    return _render_auth(
+        "Create account", "Create your account", "One email and a strong password. That's it.",
+        "/api/wb/register",
+        _field("display_name", "Name (optional)") +
+        _field("email", "Email", "email", "email") +
+        _field("password", "Password", "password", "new-password"),
+        "Create account",
+        '<a href="/login">Sign in instead</a><span></span>',
+        google_block=_google_block())
+
+
+@wb.route("/forgot", methods=["GET"])
+def forgot_page():
+    return _render_auth(
+        "Forgot password", "Reset your password", "Enter your account email and we'll send a reset link.",
+        "/api/wb/forgot",
+        _field("email", "Email", "email", "email"),
+        "Send reset link",
+        '<a href="/login">Back to sign in</a><span></span>')
+
+
+@wb.route("/reset", methods=["GET"])
+def reset_page():
+    token = request.args.get("token", "")
+    return _render_auth(
+        "Choose a new password", "Choose a new password", "Pick a strong password you don't use elsewhere.",
+        "/api/wb/reset",
+        f'<input type="hidden" name="token" value="{token}">' +
+        _field("password", "New password", "password", "new-password"),
+        "Set password",
+        '<a href="/login">Back to sign in</a><span></span>')
 
 
 @wb.route("/workbench", methods=["GET"])
@@ -73,22 +180,129 @@ def workbench_page():
 
 # --- auth ---
 
+def _establish_session(user):
+    session.clear()
+    session["user"] = user["username"]
+    session["uid"] = user["id"]
+    session.permanent = True
+    security.ensure_csrf_token()
+
+
+def _session_payload(user):
+    return {
+        "authenticated": True,
+        "user": user["username"],
+        "display_name": user.get("display_name") or user["username"],
+        "email": user.get("email") or "",
+        "auth_provider": user.get("auth_provider") or "local",
+        "theme": user.get("theme") or "system",
+        "csrf_token": security.ensure_csrf_token(),
+    }
+
+
+@wb.route("/api/wb/register", methods=["POST"])
+def register():
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    display_name = (data.get("display_name") or "").strip()
+    if security.login_throttled(email):
+        return jsonify({"error": "Too many attempts. Try again later."}), 429
+    if not security.valid_email(email):
+        return _auth_fail("Enter a valid email address.")
+    err = security.password_policy_error(password)
+    if err:
+        return _auth_fail(err)
+    if platform_db.get_user_by_email(email):
+        return _auth_fail("An account with that email already exists. Try signing in.")
+    username = email
+    if platform_db.get_user(username):
+        return _auth_fail("An account with that email already exists. Try signing in.")
+    platform_db.create_user(username, security.hash_password(password), role="analyst",
+                            email=email, display_name=display_name or email.split("@")[0],
+                            auth_provider="local")
+    user = platform_db.get_user_by_email(email)
+    _establish_session(user)
+    security.audit_event("register", f"email={email}")
+    if request.is_json or request.headers.get("Accept") == "application/json":
+        return jsonify(_session_payload(user)), 200
+    return redirect(url_for("workbench.workbench_page"))
+
+
+def _auth_fail(message, status=401):
+    security.audit_event("auth_rejected", message)
+    if request.is_json or request.headers.get("Accept") == "application/json":
+        return jsonify({"authenticated": False, "error": message}), status
+    return _render_auth("Login", "Welcome back", "Sign in to continue to your workspace.",
+                        "/api/wb/login",
+                        _field("username", "Email or username", "text", "username") +
+                        _field("password", "Password", "password", "current-password"),
+                        "Login",
+                        '<a href="/signup">Create account</a><a href="/forgot">Forgot password?</a>',
+                        error=message, google_block=_google_block()), status
+
+
 @wb.route("/api/wb/login", methods=["POST"])
 def login():
-    username = (request.form.get("username") or (request.get_json(silent=True) or {}).get("username") or "").strip()
-    password = request.form.get("password") or (request.get_json(silent=True) or {}).get("password") or ""
-    if security.authenticate(username, password):
-        session.clear()
-        session["user"] = username
-        session.permanent = True
-        security.audit_event("login", f"user={username}")
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
+    identity = (data.get("username") or data.get("email") or "").strip()
+    password = data.get("password") or ""
+    if security.login_throttled(identity):
+        return _auth_fail("Too many attempts. Try again later.", 429)
+    user = platform_db.get_user_by_email(identity.lower()) or platform_db.get_user(identity)
+    if user and (user.get("auth_provider") or "local") == "local" \
+            and security.verify_password(user["password_hash"], password):
+        _establish_session(user)
+        security.audit_event("login", f"user={user['username']}")
         if request.is_json or request.headers.get("Accept") == "application/json":
-            return jsonify({"authenticated": True, "user": username}), 200
+            return jsonify(_session_payload(user)), 200
         return redirect(url_for("workbench.workbench_page"))
-    security.audit_event("login_failed", f"user={username}")
+    # Same message whether the account exists or not (enumeration protection).
+    return _auth_fail("Invalid credentials.")
+
+
+@wb.route("/api/wb/forgot", methods=["POST"])
+def forgot():
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
+    email = (data.get("email") or "").strip().lower()
+    generic = ("If an account exists for that email, a reset link has been issued. "
+               "Check your inbox.")
+    user = platform_db.get_user_by_email(email) if security.valid_email(email) else None
+    if user:
+        token = security.issue_reset_token(user["id"])
+        reset_url = url_for("workbench.reset_page", _external=True) + f"?token={token}"
+        delivered = mail.send_reset_email(user.get("email") or email, reset_url)
+        security.audit_event("password_reset_requested",
+                             f"email={email} delivered={delivered}")
+        if not delivered and (request.is_json or request.headers.get("Accept") == "application/json"):
+            return jsonify({"message": generic,
+                            "delivery": "UNAVAILABLE",
+                            "detail": "No mail transport is configured on this server "
+                                      "(SMTP_HOST). Contact your administrator."}), 200
+    else:
+        security.audit_event("password_reset_requested", "email=unknown")
     if request.is_json or request.headers.get("Accept") == "application/json":
-        return jsonify({"authenticated": False, "error": "Invalid credentials."}), 401
-    return render_template_string(LOGIN_PAGE, error="Invalid username or password."), 401
+        return jsonify({"message": generic, "delivery": "SENT" if mail.configured() else "UNAVAILABLE"}), 200
+    return _render_auth("Forgot password", "Check your email", generic, "/api/wb/forgot",
+                        _field("email", "Email", "email", "email"), "Send reset link",
+                        '<a href="/login">Back to sign in</a><span></span>')
+
+
+@wb.route("/api/wb/reset", methods=["POST"])
+def reset():
+    data = request.form.to_dict() if request.form else (request.get_json(silent=True) or {})
+    token = (data.get("token") or "").strip()
+    password = data.get("password") or ""
+    err = security.password_policy_error(password)
+    user_id = security.consume_reset_token(token) if not err else None
+    if err or user_id is None:
+        return _auth_fail("This reset link is invalid or has expired. Request a new one.")
+    platform_db.set_password(user_id, security.hash_password(password))
+    user = platform_db.get_user_by_id(user_id)
+    security.audit_event("password_reset_completed", f"user={user['username']}")
+    if request.is_json or request.headers.get("Accept") == "application/json":
+        return jsonify({"message": "Password updated. You can now sign in."}), 200
+    return redirect(url_for("workbench.login_page"))
 
 
 @wb.route("/api/wb/logout", methods=["POST"])
@@ -101,7 +315,140 @@ def logout():
 
 @wb.route("/api/wb/session", methods=["GET"])
 def session_info():
-    return jsonify({"authenticated": bool(session.get("user")), "user": session.get("user", "")}), 200
+    if not session.get("user"):
+        return jsonify({"authenticated": False, "user": ""}), 200
+    user = platform_db.get_user(session["user"]) or {}
+    return jsonify(_session_payload(user)), 200
+
+
+# --- Google OIDC ---
+
+@wb.route("/api/wb/auth/config", methods=["GET"])
+def auth_config():
+    return jsonify({
+        "google": {"configured": google_oauth.configured()},
+        "password_reset_delivery": "smtp" if mail.configured() else "none",
+    }), 200
+
+
+@wb.route("/api/wb/auth/google", methods=["GET"])
+def google_start():
+    if not google_oauth.configured():
+        return jsonify({"error": "Google authentication is not configured on this server.",
+                        "configured": False}), 503
+    state = secrets.token_urlsafe(24)
+    nonce = secrets.token_urlsafe(24)
+    session["oauth_state"] = state
+    session["oauth_nonce"] = nonce
+    return redirect(google_oauth.auth_url(state, nonce))
+
+
+@wb.route("/api/wb/auth/google/callback", methods=["GET"])
+def google_callback():
+    if not google_oauth.configured():
+        return jsonify({"error": "Google authentication is not configured on this server."}), 503
+    state = request.args.get("state", "")
+    expected_state = session.pop("oauth_state", "")
+    nonce = session.pop("oauth_nonce", "")
+    if not state or not expected_state or not secrets.compare_digest(state, expected_state):
+        security.audit_event("oauth_state_mismatch", "")
+        return jsonify({"error": "OAuth state validation failed. Start the sign-in again."}), 403
+    error = request.args.get("error")
+    if error:
+        return jsonify({"error": f"Google sign-in was not completed ({error})."}), 401
+    code = request.args.get("code", "")
+    if not code:
+        return jsonify({"error": "No authorization code returned by Google."}), 400
+    try:
+        tokens = google_oauth.exchange_code(code)
+        claims = google_oauth.verify_id_token(tokens["id_token"], nonce)
+    except ValueError as e:
+        security.audit_event("oauth_token_rejected", str(e))
+        return jsonify({"error": "Google token validation failed. Start the sign-in again."}), 401
+    except Exception as e:
+        logger.warning("Google token exchange failed: %s", e)
+        return jsonify({"error": "Could not reach Google to complete sign-in."}), 502
+    profile = google_oauth.profile_from_claims(claims)
+    if not profile["email"] or not profile["email_verified"]:
+        return jsonify({"error": "Google account has no verified email address."}), 401
+    user = platform_db.get_user_by_email(profile["email"])
+    if not user:
+        platform_db.create_user(profile["email"], security.hash_password(secrets.token_urlsafe(32)),
+                                role="analyst", email=profile["email"],
+                                display_name=profile["name"] or profile["email"].split("@")[0],
+                                auth_provider="google")
+        user = platform_db.get_user_by_email(profile["email"])
+        security.audit_event("oauth_account_created", f"email={profile['email']}")
+    _establish_session(user)
+    security.audit_event("oauth_login", f"user={user['username']}")
+    return redirect(url_for("workbench.workbench_page"))
+
+
+# --- profile & appearance ---
+
+@wb.route("/api/wb/profile", methods=["GET"])
+@security.api_login_required
+def profile():
+    user = platform_db.get_user(session["user"]) or {}
+    return jsonify({
+        "username": user.get("username", ""),
+        "display_name": user.get("display_name") or user.get("username", ""),
+        "email": user.get("email") or "",
+        "auth_provider": user.get("auth_provider") or "local",
+        "theme": user.get("theme") or "system",
+        "created_at": user.get("created_at", ""),
+        "role": user.get("role", ""),
+    }), 200
+
+
+@wb.route("/api/wb/profile", methods=["POST"])
+@security.api_login_required
+def update_profile():
+    payload = request.get_json(silent=True) or {}
+    display_name = (payload.get("display_name") or "").strip()
+    if len(display_name) > 80:
+        return jsonify({"error": "Display name too long."}), 400
+    user = platform_db.get_user(session["user"])
+    platform_db.update_profile(user["id"], display_name=display_name or None)
+    security.audit_event("profile_updated", f"user={user['username']}")
+    return jsonify({"updated": True}), 200
+
+
+@wb.route("/api/wb/profile/password", methods=["POST"])
+@security.api_login_required
+def change_password():
+    payload = request.get_json(silent=True) or {}
+    current = payload.get("current_password") or ""
+    new = payload.get("new_password") or ""
+    user = platform_db.get_user(session["user"])
+    if (user.get("auth_provider") or "local") != "local":
+        return jsonify({"error": "This account signs in with Google; passwords are managed there."}), 400
+    if not security.verify_password(user["password_hash"], current):
+        return jsonify({"error": "Current password is incorrect."}), 401
+    err = security.password_policy_error(new)
+    if err:
+        return jsonify({"error": err}), 400
+    platform_db.set_password(user["id"], security.hash_password(new))
+    security.audit_event("password_changed", f"user={user['username']}")
+    return jsonify({"updated": True}), 200
+
+
+@wb.route("/api/wb/appearance", methods=["GET", "POST"])
+def appearance():
+    theme = "system"
+    if session.get("user"):
+        user = platform_db.get_user(session["user"])
+        theme = (user or {}).get("theme") or "system"
+    if request.method == "GET":
+        return jsonify({"theme": theme}), 200
+    payload = request.get_json(silent=True) or {}
+    wanted = (payload.get("theme") or "").strip()
+    if wanted not in ("system", "light", "dark"):
+        return jsonify({"error": "theme must be system, light or dark"}), 400
+    if session.get("user"):
+        user = platform_db.get_user(session["user"])
+        platform_db.update_profile(user["id"], theme=wanted)
+    return jsonify({"theme": wanted}), 200
 
 
 # --- dashboard ---
@@ -153,8 +500,15 @@ def investigate():
         return jsonify({"error": f"No analyzer for type {itype}", "detected_type": itype}), 400
 
     inv_id = platform_db.save_investigation(itype, value, result, analyst=security.current_user())
+    geography.record_from_investigation(result, itype, value)
     security.audit_event("investigate", f"{itype}:{value}")
     return jsonify({"detected_type": itype, "investigation_id": inv_id, "result": result}), 200
+
+
+@wb.route("/api/wb/map", methods=["GET"])
+@security.api_login_required
+def investigation_map():
+    return jsonify(geography.map_payload()), 200
 
 
 @wb.route("/api/wb/investigations", methods=["GET"])

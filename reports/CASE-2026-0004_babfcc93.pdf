@@ -1,0 +1,92 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3137 >>
+stream
+BT /F2 18 Tf 1 0 0 1 54 738.00 Tm (Cybersecurity Analyst Workbench) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 716.00 Tm (CONFIDENTIAL - INTERNAL USE) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 696.00 Tm (Case ID: CASE-2026-0004) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 682.00 Tm (Title: Suspicious outbound traffic) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 668.00 Tm (Analyst: analyst) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 654.00 Tm (Date: 2026-09-21 18:03:11 UTC) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 640.00 Tm (Status / Priority: OPEN / HIGH) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 620.00 Tm (Executive Summary) Tj ET
+0.75 w 54 602.00 m 558 602.00 l S
+BT /F1 10 Tf 1 0 0 1 54 594.00 Tm (Case CASE-2026-0004 \('Suspicious outbound traffic'\) was opened by analyst on 2026-09-21T18:03:0) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 580.00 Tm (9.316796+00:00. The investigation attached 0 evidence item\(s\), 0 indicator\(s\), 0 saved investig) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 566.00 Tm (ation\(s\) and 0 NIDS detection\(s\). 0 external threat-intelligence result\(s\) returned data. All s) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 552.00 Tm (tatements below are traceable to the evidence sources listed at the end of this report.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 532.00 Tm (Scope) Tj ET
+0.75 w 54 514.00 m 558 514.00 l S
+BT /F1 10 Tf 1 0 0 1 54 506.00 Tm (Investigated indicators and evidence types: . Analyst-led investigation) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 486.00 Tm (Indicators) Tj ET
+0.75 w 54 468.00 m 558 468.00 l S
+BT /F1 10 Tf 1 0 0 1 54 460.00 Tm (No indicators attached.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 440.00 Tm (Technical Findings) Tj ET
+0.75 w 54 422.00 m 558 422.00 l S
+BT /F1 10 Tf 1 0 0 1 54 414.00 Tm (No technical findings recorded.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 394.00 Tm (Threat Intelligence) Tj ET
+0.75 w 54 376.00 m 558 376.00 l S
+BT /F1 10 Tf 1 0 0 1 54 368.00 Tm (No external threat-intelligence results returned.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 348.00 Tm (Network Analysis \(Observed / Scanned\)) Tj ET
+0.75 w 54 330.00 m 558 330.00 l S
+BT /F1 10 Tf 1 0 0 1 54 322.00 Tm (No network detection evidence attached.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 302.00 Tm (Log Analysis) Tj ET
+0.75 w 54 284.00 m 558 284.00 l S
+BT /F1 10 Tf 1 0 0 1 54 276.00 Tm (No log files attached.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 256.00 Tm (Timeline) Tj ET
+0.75 w 54 238.00 m 558 238.00 l S
+BT /F1 10 Tf 1 0 0 1 62 230.00 Tm (2026-09-21T18:03:09.338319+00:00  [case] Case CASE-2026-0004 created  \(USER-PROVIDED\)) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 210.00 Tm (Analyst Assessment \(Interpretation\)) Tj ET
+0.75 w 54 192.00 m 558 192.00 l S
+BT /F1 10 Tf 1 0 0 1 54 184.00 Tm (No analyst notes recorded.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 164.00 Tm (Evidence Sources) Tj ET
+0.75 w 54 146.00 m 558 146.00 l S
+BT /F1 10 Tf 1 0 0 1 54 138.00 Tm (No external or observed sources were used.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 118.00 Tm (Disclaimer) Tj ET
+0.75 w 54 100.00 m 558 100.00 l S
+BT /F1 10 Tf 1 0 0 1 54 92.00 Tm (Observed facts are measurements made by this platform \(packet capture, DNS/TLS queries, local f) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 78.00 Tm (ile hashing\). Calculated values are derived locally from supplied input. External intelligence ) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 365 >>
+stream
+BT /F1 10 Tf 1 0 0 1 54 738.00 Tm (is quoted verbatim from the named provider with a retrieval timestamp and may be incomplete or ) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 724.00 Tm (stale. Analyst notes are interpretation and are labelled as such. Absence of a threat-intellige) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 710.00 Tm (nce result does not imply an indicator is safe.) Tj ET
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000402 00000 n 
+0000003591 00000 n 
+0000003727 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+4143
+%%EOF

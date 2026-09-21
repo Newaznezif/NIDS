@@ -1,0 +1,74 @@
+{
+  "cover": {
+    "platform": "Cybersecurity Analyst Workbench",
+    "case_id": "CASE-2026-0006",
+    "title": "Test case",
+    "analyst": "analyst",
+    "date": "2026-09-21 18:24:46 UTC",
+    "classification": "CONFIDENTIAL - INTERNAL USE",
+    "status": "OPEN",
+    "priority": "MEDIUM"
+  },
+  "executive_summary": "Case CASE-2026-0006 ('Test case') was opened by analyst on 2026-09-21T18:24:46.067721+00:00. The investigation attached 1 evidence item(s), 1 indicator(s), 0 saved investigation(s) and 0 NIDS detection(s). 0 external threat-intelligence result(s) returned data. All statements below are traceable to the evidence sources listed at the end of this report.",
+  "scope": "Investigated indicators and evidence types: ip. scope",
+  "indicators": [
+    {
+      "type": "ip",
+      "value": "203.0.113.5",
+      "label": "203.0.113.5",
+      "provenance": "OBSERVED"
+    }
+  ],
+  "technical_findings": [],
+  "threat_intelligence": [],
+  "network_analysis": [],
+  "log_analysis": [],
+  "detection_evidence": [],
+  "timeline": [
+    {
+      "id": 23,
+      "case_db_id": 7,
+      "ts": "2026-09-21T18:24:46.080197+00:00",
+      "kind": "case",
+      "summary": "Case CASE-2026-0006 created",
+      "provenance": "USER-PROVIDED",
+      "source": "analyst"
+    },
+    {
+      "id": 24,
+      "case_db_id": 7,
+      "ts": "2026-09-21T18:24:46.113937+00:00",
+      "kind": "evidence",
+      "summary": "Attached ip: 203.0.113.5",
+      "provenance": "OBSERVED",
+      "source": "analyst"
+    },
+    {
+      "id": 25,
+      "case_db_id": 7,
+      "ts": "2026-09-21T18:24:46.148428+00:00",
+      "kind": "note",
+      "summary": "Analyst added note",
+      "provenance": "USER-PROVIDED",
+      "source": "analyst"
+    },
+    {
+      "id": 26,
+      "case_db_id": 7,
+      "ts": "2026-09-21T18:24:46.183759+00:00",
+      "kind": "report",
+      "summary": "Generated PDF report CASE-2026-0006_dffba946.pdf",
+      "provenance": "CALCULATED",
+      "source": "report generator"
+    }
+  ],
+  "analyst_notes": [
+    {
+      "author": "analyst",
+      "created_at": "2026-09-21T18:24:46.138772+00:00",
+      "body": "analyst interpretation"
+    }
+  ],
+  "evidence_sources": [],
+  "disclaimer": "Observed facts are measurements made by this platform (packet capture, DNS/TLS queries, local file hashing). Calculated values are derived locally from supplied input. External intelligence is quoted verbatim from the named provider with a retrieval timestamp and may be incomplete or stale. Analyst notes are interpretation and are labelled as such. Absence of a threat-intelligence result does not imply an indicator is safe."
+}

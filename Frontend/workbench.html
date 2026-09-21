@@ -5,18 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cybersecurity Analyst Workbench</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>(function(){var t='system';try{t=localStorage.getItem('wb-theme')||'system'}catch(e){}
+var dark=t==='dark'||(t!=='light'&&!(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches));
+document.documentElement.setAttribute('data-theme',dark?'dark':'light');})();</script>
 <style>
   body{background:var(--bg-dark);color:var(--text-primary);font-family:var(--font-sans);margin:0}
-  .wb-top{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border-color);background:rgba(10,15,28,.9);position:sticky;top:0;z-index:20}
-  .wb-top .brand{font-weight:700;letter-spacing:.04em}
+  .wb-top{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--border-color);background:var(--bg-card);position:sticky;top:0;z-index:20}
+  .wb-top .brand{font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:10px}
   .wb-top .spacer{flex:1}
-  .wb-top a,.wb-top button{background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;text-decoration:none}
-  .wb-top a:hover,.wb-top button:hover{color:var(--text-primary);border-color:var(--border-bright)}
+  .wb-top a,.wb-top button.wb-btn{background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:12px;text-decoration:none}
+  .wb-top a:hover,.wb-top button.wb-btn:hover{color:var(--text-primary);border-color:var(--border-bright)}
   .wb-shell{display:flex;min-height:calc(100vh - 57px)}
   .wb-nav{width:210px;border-right:1px solid var(--border-color);padding:14px 10px;display:flex;flex-direction:column;gap:4px}
   .wb-nav button{text-align:left;background:none;border:none;color:var(--text-secondary);padding:9px 12px;border-radius:6px;cursor:pointer;font-size:13px}
   .wb-nav button:hover{background:var(--bg-card);color:var(--text-primary)}
-  .wb-nav button.active{background:rgba(0,242,254,.08);color:var(--accent-cyan)}
+  .wb-nav button.active{background:color-mix(in srgb, var(--accent-cyan) 10%, transparent);color:var(--accent-cyan)}
   .wb-main{flex:1;padding:22px;overflow:auto}
   .view{display:none}
   .view.active{display:block}
@@ -24,38 +28,44 @@
   .hint{color:var(--text-muted);font-size:12px;margin-bottom:18px}
   .card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:16px;margin-bottom:16px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input,select,textarea{background:#0b1220;border:1px solid #26324f;border-radius:6px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:var(--font-mono)}
+  input,select,textarea{background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:var(--font-mono)}
   textarea{width:100%;min-height:110px}
   button.primary{background:var(--accent-cyan);border:none;color:#04202a;font-weight:600;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:13px}
   button.secondary{background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px}
   button.primary:hover{filter:brightness(1.1)}
   table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--font-mono)}
   th{text-align:left;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border-color)}
-  td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;word-break:break-all}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;letter-spacing:.06em;border:1px solid}
-  .pill.obs{color:var(--accent-emerald);border-color:var(--accent-emerald)}
-  .pill.calc{color:var(--accent-blue);border-color:var(--accent-blue)}
-  .pill.ext{color:var(--accent-purple);border-color:var(--accent-purple)}
-  .pill.unav{color:var(--text-muted);border-color:var(--text-muted)}
-  .pill.user{color:var(--accent-amber);border-color:var(--accent-amber)}
-  .pill.demo{color:var(--accent-rose);border-color:var(--accent-rose)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border-color);vertical-align:top;word-break:break-all}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
   .kv{font-size:12px;color:var(--text-secondary);line-height:1.8;font-family:var(--font-mono)}
   .kv b{color:var(--text-primary);font-weight:600}
   .muted{color:var(--text-muted);font-size:12px}
   .err{color:var(--accent-rose);font-size:12px;margin-top:8px}
   .ok{color:var(--accent-emerald);font-size:12px;margin-top:8px}
-  pre{background:#0b1220;border:1px solid #26324f;border-radius:6px;padding:10px;overflow:auto;font-size:11px;font-family:var(--font-mono);max-height:320px}
+  pre{background:var(--bg-input);border:1px solid var(--border-input);border-radius:6px;padding:10px;overflow:auto;font-size:11px;font-family:var(--font-mono);max-height:320px}
   .copy{background:none;border:1px solid var(--border-color);color:var(--text-muted);border-radius:4px;font-size:10px;padding:2px 6px;cursor:pointer;margin-left:6px}
+  .logo{display:block}
 </style>
 </head>
 <body>
 <div class="wb-top">
-  <span class="brand">CYBERSECURITY ANALYST WORKBENCH</span>
-  <span class="muted" id="wb-user"></span>
+  <span class="brand"><svg class="logo" width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="56" rx="14" fill="var(--accent-cyan,#0e7490)"/><path d="M32 14 L46 20 V32 C46 41 40 47 32 50 C24 47 18 41 18 32 V20 Z" fill="none" stroke="#04121a" stroke-width="4" stroke-linejoin="round"/><path d="M25 32 l5 5 l10 -11" fill="none" stroke="#04121a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>CYBERSECURITY ANALYST WORKBENCH</span>
   <span class="spacer"></span>
   <a href="/">Network Monitoring (NIDS)</a>
-  <button id="wb-logout">Sign out</button>
+  <div style="position:relative">
+    <button class="user-chip" id="wb-user-chip" aria-haspopup="true" aria-expanded="false">
+      <span class="user-avatar" id="wb-avatar">?</span>
+      <span id="wb-user-name">Account</span>
+      <span style="color:var(--text-muted)">&#9662;</span>
+    </button>
+    <div class="user-menu" id="wb-user-menu" role="menu">
+      <button data-modal="profile" role="menuitem"><i class="fa-regular fa-user"></i> Profile</button>
+      <button data-modal="appearance" role="menuitem"><i class="fa-regular fa-sun"></i> Appearance</button>
+      <button data-modal="security" role="menuitem"><i class="fa-solid fa-lock"></i> Security</button>
+      <div class="sep"></div>
+      <button id="wb-logout" role="menuitem"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
 </div>
 <div class="wb-shell">
   <nav class="wb-nav">
@@ -200,6 +210,56 @@
 
   </main>
 </div>
+
+<!-- Profile modal -->
+<div class="modal-backdrop" id="modal-profile">
+  <div class="modal" role="dialog" aria-modal="true">
+    <header><h3>Profile</h3><button class="x" data-close>&times;</button></header>
+    <div class="modal-body">
+      <div class="field"><label>Display name</label><input class="form-input" id="pf-name" maxlength="80"></div>
+      <div class="field"><label>Email</label><input class="form-input" id="pf-email" disabled></div>
+      <div class="field"><label>Sign-in method</label><input class="form-input" id="pf-provider" disabled></div>
+      <div class="err" id="pf-err"></div><div class="ok" id="pf-ok"></div>
+    </div>
+    <div class="modal-foot"><button class="secondary" data-close>Cancel</button><button class="primary" id="pf-save">Save</button></div>
+  </div>
+</div>
+
+<!-- Appearance modal -->
+<div class="modal-backdrop" id="modal-appearance">
+  <div class="modal" role="dialog" aria-modal="true">
+    <header><h3>Appearance</h3><button class="x" data-close>&times;</button></header>
+    <div class="modal-body">
+      <div class="field"><label>Theme</label>
+        <div class="theme-options">
+          <label><input type="radio" name="theme" value="system"> System</label>
+          <label><input type="radio" name="theme" value="light"> Light</label>
+          <label><input type="radio" name="theme" value="dark"> Dark</label>
+        </div>
+      </div>
+      <div class="muted">Your choice is saved to your account and applied across every module.</div>
+      <div class="ok" id="ap-ok"></div>
+    </div>
+    <div class="modal-foot"><button class="secondary" data-close>Close</button></div>
+  </div>
+</div>
+
+<!-- Security modal -->
+<div class="modal-backdrop" id="modal-security">
+  <div class="modal" role="dialog" aria-modal="true">
+    <header><h3>Security</h3><button class="x" data-close>&times;</button></header>
+    <div class="modal-body" id="sec-body">
+      <div class="field"><label>Current password</label><input class="form-input" type="password" id="sec-cur" autocomplete="current-password"></div>
+      <div class="field"><label>New password</label><input class="form-input" type="password" id="sec-new" autocomplete="new-password"></div>
+      <div class="muted">Minimum 8 characters, including a letter and a number.</div>
+      <div class="err" id="sec-err"></div><div class="ok" id="sec-ok"></div>
+    </div>
+    <div class="modal-foot"><button class="secondary" data-close>Cancel</button><button class="primary" id="sec-save">Update password</button></div>
+  </div>
+</div>
+
+<script src="/js/theme.js"></script>
+<script src="/js/geomap.js"></script>
 <script src="/js/workbench.js"></script>
 </body>
 </html>

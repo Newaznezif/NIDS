@@ -1,0 +1,26 @@
+services:
+  nids:
+    build: .
+    container_name: analyst-workbench
+    # Live packet capture requires raw-socket capabilities and visibility of the
+    # host's network interfaces. host networking is the practical choice on Linux.
+    network_mode: host
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      FLASK_DEBUG: "False"
+      # Persist all runtime data on a named volume instead of the image layer.
+      DB_NAME: /data/nids_database.db
+      UPLOAD_DIRNAME: /data/uploads
+      REPORT_DIRNAME: /data/reports
+    volumes:
+      - workbench-data:/data
+    restart: unless-stopped
+
+volumes:
+  workbench-data:

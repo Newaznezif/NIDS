@@ -1,0 +1,7 @@
+section,field,value,provenance
+indicator,ip,203.0.113.5,OBSERVED
+timeline,case,Case CASE-2026-0009 created,USER-PROVIDED
+timeline,evidence,Attached ip: 203.0.113.5,OBSERVED
+timeline,note,Analyst added note,USER-PROVIDED
+timeline,report,Generated PDF report CASE-2026-0009_b23e7ea7.pdf,CALCULATED
+timeline,report,Generated JSON report CASE-2026-0009_bc3ab37d.json,CALCULATED

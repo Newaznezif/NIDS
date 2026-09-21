@@ -27,7 +27,7 @@ from .database import (
 from .detector import IntrusionDetector
 from .sniffer import NetworkSniffer
 from .socket_handler import socketio, init_socketio
-from . import platform_db, security, demo_data
+from . import platform_db, security, demo_data, geography
 from .workbench_routes import wb
 
 # Configure Logging
@@ -44,6 +44,7 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "Frontend")
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 app.config["SECRET_KEY"] = SECRET_KEY
 app.permanent_session_lifetime = timedelta(seconds=SESSION_LIFETIME_SECONDS)
+security.apply_cookie_settings(app)
 CORS(app)
 
 # Initialize Real-time Socket.IO
@@ -61,6 +62,7 @@ with app.app_context():
     init_db()
     platform_db.init_platform_db()
     security.ensure_default_user()
+    geography.backfill_from_investigations()
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     os.makedirs(REPORT_DIR, exist_ok=True)
     demo_data.seed_demo()

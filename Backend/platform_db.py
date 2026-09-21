@@ -116,6 +116,45 @@ def init_platform_db():
     c.execute("CREATE INDEX IF NOT EXISTS idx_timeline_case ON timeline_events (case_db_id)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_invest_value ON investigations (ioc_value)")
 
+    # Migration: account/profile columns for databases created before them.
+    user_cols = {r["name"] for r in c.execute("PRAGMA table_info(users)").fetchall()}
+    for col, ddl in (
+        ("email", "ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''"),
+        ("display_name", "ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''"),
+        ("auth_provider", "ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'local'"),
+        ("theme", "ALTER TABLE users ADD COLUMN theme TEXT DEFAULT 'system'"),
+    ):
+        if col not in user_cols:
+            c.execute(ddl)
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email) WHERE email <> ''")
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token_hash TEXT NOT NULL,
+            created_at TEXT, expires_at REAL, used_at TEXT
+        )
+    """)
+
+    # Investigation geography: only rows backed by real geolocation results.
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS geo_artifacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            artifact TEXT NOT NULL,
+            artifact_type TEXT NOT NULL,
+            country TEXT DEFAULT '',
+            country_code TEXT DEFAULT '',
+            latitude REAL, longitude REAL,
+            asn TEXT DEFAULT '', organization TEXT DEFAULT '', city TEXT DEFAULT '',
+            geo_provider TEXT DEFAULT '',
+            investigation_count INTEGER DEFAULT 0,
+            first_seen TEXT, last_seen TEXT,
+            UNIQUE(artifact)
+        )
+    """)
+    c.execute("CREATE INDEX IF NOT EXISTS idx_geo_country ON geo_artifacts (country_code)")
+
     conn.commit()
     conn.close()
     logger.info("Platform (workbench) schema initialized.")
@@ -130,14 +169,81 @@ def get_user(username: str):
     return dict(row) if row else None
 
 
-def create_user(username: str, password_hash: str, role: str = "analyst"):
+def create_user(username: str, password_hash: str, role: str = "analyst",
+                email: str = "", display_name: str = "", auth_provider: str = "local"):
     conn = get_connection()
     conn.execute(
-        "INSERT INTO users (username, password_hash, role, created_at) VALUES (?,?,?,?)",
-        (username, password_hash, role, _now()),
+        "INSERT INTO users (username, password_hash, role, created_at, email, display_name, auth_provider) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (username, password_hash, role, _now(), email or "", display_name or "", auth_provider),
     )
     conn.commit()
     conn.close()
+
+
+def get_user_by_email(email: str):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE email = ? AND email <> ''", (email or "",)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_user_by_id(user_id: int):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def update_profile(user_id: int, display_name: str = None, theme: str = None):
+    fields, vals = [], []
+    if display_name is not None:
+        fields.append("display_name = ?"); vals.append(display_name)
+    if theme is not None:
+        if theme not in ("system", "light", "dark"):
+            raise ValueError("theme must be system, light or dark")
+        fields.append("theme = ?"); vals.append(theme)
+    if not fields:
+        return False
+    vals.append(user_id)
+    conn = get_connection()
+    conn.execute(f"UPDATE users SET {', '.join(fields)} WHERE id = ?", vals)
+    conn.commit()
+    conn.close()
+    return True
+
+
+def set_password(user_id: int, password_hash: str):
+    conn = get_connection()
+    conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+    conn.commit()
+    conn.close()
+
+
+def create_reset_token(user_id: int, token_hash: str, expires_at: float):
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO password_resets (user_id, token_hash, created_at, expires_at) VALUES (?,?,?,?)",
+        (user_id, token_hash, _now(), expires_at),
+    )
+    conn.commit()
+    conn.close()
+
+
+def consume_reset_token(token_hash: str, now: float):
+    """Return the user_id for a valid, unused, unexpired token and mark it used."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM password_resets WHERE token_hash = ? AND used_at IS NULL", (token_hash,)
+    ).fetchone()
+    if not row or row["expires_at"] < now:
+        conn.close()
+        return None
+    conn.execute("UPDATE password_resets SET used_at = ? WHERE id = ?", (_now(), row["id"]))
+    conn.commit()
+    user_id = row["user_id"]
+    conn.close()
+    return user_id
 
 
 def audit(username: str, event: str, detail: str = "", ip: str = ""):
@@ -372,5 +478,74 @@ def save_report(case_db_id, fmt, stored_name, analyst=""):
 def recent_reports(limit=50):
     conn = get_connection()
     rows = conn.execute("SELECT * FROM reports ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+# --- investigation geography (real geolocation results only) ---
+
+def record_geo_artifact(artifact, artifact_type, geo, now_iso):
+    """Record/increment a geolocated artifact. `geo` must be a provider result
+    that actually returned coordinates; callers must not invoke this otherwise."""
+    lat = geo.get("latitude")
+    lon = geo.get("longitude")
+    if lat is None or lon is None:
+        return None
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM geo_artifacts WHERE artifact = ?", (artifact,)).fetchone()
+    if row:
+        conn.execute(
+            "UPDATE geo_artifacts SET investigation_count = investigation_count + 1, last_seen = ? "
+            "WHERE artifact = ?", (now_iso, artifact),
+        )
+        gid = row["id"]
+    else:
+        cur = conn.execute(
+            "INSERT INTO geo_artifacts (artifact, artifact_type, country, country_code, latitude, "
+            "longitude, asn, organization, city, geo_provider, investigation_count, first_seen, last_seen) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (artifact, artifact_type, geo.get("country", ""), geo.get("country_code", ""),
+             lat, lon, str(geo.get("asn", "") or ""), geo.get("organization", "") or geo.get("isp", "") or "",
+             geo.get("city", ""), geo.get("provider", ""), 1, now_iso, now_iso),
+        )
+        gid = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return gid
+
+
+def geo_country_aggregate():
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT country, country_code, SUM(investigation_count) AS investigations, "
+        "COUNT(*) AS unique_ips, MAX(last_seen) AS last_investigated, "
+        "AVG(latitude) AS latitude, AVG(longitude) AS longitude "
+        "FROM geo_artifacts GROUP BY country_code, country ORDER BY investigations DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def geo_markers(limit=300):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT artifact, artifact_type, country, country_code, city, asn, organization, "
+        "latitude, longitude, investigation_count, first_seen, last_seen, geo_provider "
+        "FROM geo_artifacts ORDER BY investigation_count DESC, last_seen DESC LIMIT ?", (limit,)
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def geo_artifact_get(artifact):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM geo_artifacts WHERE artifact = ?", (artifact,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def all_geo_artifacts():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM geo_artifacts").fetchall()
     conn.close()
     return [dict(r) for r in rows]

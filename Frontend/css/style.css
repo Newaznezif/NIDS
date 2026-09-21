@@ -481,3 +481,374 @@ body.dark-theme {
     border-top: 1px solid var(--border-color);
     margin-top: auto;
 }
+
+/* ============================================================
+   Design system tokens — professionalization layer (Request 5)
+   Semantic severity + activity scale, provenance pills, theme
+   overrides, user menu, modals, geography map. Additive only.
+   ============================================================ */
+:root {
+    --bg-input: #0b1220;
+    --border-input: #26324f;
+    --bg-elev: #111a2e;
+
+    /* Semantic severity scale */
+    --sev-info: #3b82f6;
+    --sev-low: #22c55e;
+    --sev-medium: #f59e0b;
+    --sev-high: #f97316;
+    --sev-critical: #ef4444;
+
+    /* Investigation-activity scale (NOT maliciousness) */
+    --act-low: #22c55e;
+    --act-medium: #eab308;
+    --act-high: #f97316;
+    --act-veryhigh: #ef4444;
+}
+
+/* Semantic severity badges — colour + dot + label (never colour alone) */
+.severity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+}
+.severity-badge::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+}
+.sev-critical { color: #f87171; background: color-mix(in srgb, var(--sev-critical) 18%, transparent); border-color: color-mix(in srgb, var(--sev-critical) 50%, transparent); }
+.sev-high     { color: #fdba74; background: color-mix(in srgb, var(--sev-high) 18%, transparent);     border-color: color-mix(in srgb, var(--sev-high) 50%, transparent); }
+.sev-medium   { color: #fcd34d; background: color-mix(in srgb, var(--sev-medium) 18%, transparent);   border-color: color-mix(in srgb, var(--sev-medium) 50%, transparent); }
+.sev-low      { color: #4ade80; background: color-mix(in srgb, var(--sev-low) 18%, transparent);      border-color: color-mix(in srgb, var(--sev-low) 50%, transparent); }
+.sev-info     { color: #60a5fa; background: color-mix(in srgb, var(--sev-info) 18%, transparent);     border-color: color-mix(in srgb, var(--sev-info) 50%, transparent); }
+
+/* Provenance pills */
+.pill {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    background: rgba(148, 163, 184, 0.08);
+    white-space: nowrap;
+}
+.pill.obs   { color: #60a5fa; border-color: color-mix(in srgb, var(--sev-info) 45%, transparent); }
+.pill.calc  { color: #4ade80; border-color: color-mix(in srgb, var(--sev-low) 45%, transparent); }
+.pill.ext   { color: #c084fc; border-color: color-mix(in srgb, var(--accent-purple) 45%, transparent); }
+.pill.user  { color: #fcd34d; border-color: color-mix(in srgb, var(--sev-medium) 45%, transparent); }
+.pill.unav  { color: var(--text-muted); }
+.pill.demo  { color: #fdba74; border-color: color-mix(in srgb, var(--sev-high) 45%, transparent); }
+
+/* ---------- Light theme overrides ---------- */
+html[data-theme="light"] {
+    --bg-dark: #f4f6fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-input: #ffffff;
+    --bg-elev: #f8fafc;
+    --border-color: rgba(15, 23, 42, 0.10);
+    --border-bright: rgba(14, 116, 144, 0.35);
+    --border-input: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --accent-cyan: #0e7490;
+    --shadow-glow: 0 1px 3px rgba(15, 23, 42, 0.10);
+}
+html[data-theme="light"] body.dark-theme {
+    background-image: none;
+    background-color: var(--bg-dark);
+}
+html[data-theme="light"] .top-nav,
+html[data-theme="light"] .wb-top,
+html[data-theme="light"] .wb-nav {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--border-color);
+}
+html[data-theme="light"] .metric-card,
+html[data-theme="light"] .chart-card,
+html[data-theme="light"] .alerts-section,
+html[data-theme="light"] .control-bar,
+html[data-theme="light"] .geo-card {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+html[data-theme="light"] .form-input,
+html[data-theme="light"] .form-select {
+    background: var(--bg-input);
+    border-color: var(--border-input);
+    color: var(--text-primary);
+}
+html[data-theme="light"] .alerts-table th {
+    background: #eef2f7;
+}
+html[data-theme="light"] pre {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+/* ---------- Appearance control (radio group) ---------- */
+.theme-options {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+.theme-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.theme-options label:hover { border-color: var(--border-bright); }
+.theme-options label:has(input:checked) {
+    border-color: var(--accent-cyan);
+    background: color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+    color: var(--text-primary);
+}
+.theme-options input { accent-color: var(--accent-cyan); }
+
+/* ---------- User chip + menu ---------- */
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.6rem 0.3rem 0.35rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-card);
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    flex: none;
+}
+.user-menu {
+    position: absolute;
+    right: 1rem;
+    top: 3.6rem;
+    min-width: 190px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    padding: 0.4rem;
+    z-index: 300;
+    display: none;
+}
+.user-menu.open { display: block; }
+.user-menu button,
+.user-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    background: none;
+    border: none;
+    border-radius: 7px;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: none;
+}
+.user-menu button:hover,
+.user-menu a:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.user-menu .sep { height: 1px; background: var(--border-color); margin: 0.3rem 0; }
+
+/* ---------- Modals ---------- */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.6);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 1rem;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+    width: 100%;
+    max-width: 460px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+.modal header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.modal header h3 { font-size: 1rem; color: var(--text-primary); }
+.modal .modal-body { padding: 1.2rem; }
+.modal .modal-foot {
+    padding: 0.9rem 1.2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+.modal .x {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.field { margin-bottom: 0.9rem; }
+.field label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    font-family: var(--font-mono);
+}
+.field .form-input,
+.field .form-select { width: 100%; }
+
+/* ---------- Geography map ---------- */
+.geo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.2rem 1.2rem;
+    margin-bottom: 1.25rem;
+}
+.geo-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+.geo-head h2 { font-size: 1.05rem; color: var(--text-primary); }
+.geo-head .sub { font-size: 0.78rem; color: var(--text-muted); }
+.geo-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+.geo-legend .swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.geo-legend .swatch i {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+.geo-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+.geo-map-wrap {
+    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-input);
+    overflow: hidden;
+}
+.geo-map-wrap svg { display: block; width: 100%; height: auto; }
+.geo-country { fill: #1e293b; stroke: rgba(255, 255, 255, 0.06); stroke-width: 0.3; transition: fill 0.15s ease; }
+html[data-theme="light"] .geo-country { fill: #e2e8f0; stroke: rgba(15, 23, 42, 0.08); }
+.geo-country.has-activity { cursor: pointer; }
+.geo-country:hover { filter: brightness(1.15); }
+.geo-marker {
+    fill: var(--accent-cyan);
+    stroke: #04121a;
+    stroke-width: 0.6;
+    cursor: pointer;
+}
+.geo-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(2, 6, 23, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    max-width: 240px;
+    z-index: 20;
+    display: none;
+    line-height: 1.55;
+}
+.geo-tooltip.open { display: block; }
+.geo-tooltip .tt-title { font-weight: 700; margin-bottom: 0.25rem; }
+.geo-tooltip .tt-row { color: var(--text-secondary); }
+.geo-tooltip .tt-row b { color: var(--text-primary); font-family: var(--font-mono); }
+.geo-side {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.geo-side .stat b {
+    display: block;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+.geo-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+.geo-investigate-btn {
+    margin-top: 0.4rem;
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-bright);
+    background: color-mix(in srgb, var(--accent-cyan) 14%, transparent);
+    color: var(--text-primary);
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+}

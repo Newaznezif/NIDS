@@ -1,0 +1,19 @@
+section,field,value,provenance
+indicator,hash,d41d8cd98f00b204e9800998ecf8427e,CALCULATED
+indicator,ioc,198.51.100.23,EXTRACTED
+threat_intelligence,VirusTotal,8.8.8.8,NOT CONFIGURED
+threat_intelligence,AbuseIPDB,8.8.8.8,NOT CONFIGURED
+threat_intelligence,AlienVault OTX,8.8.8.8,NOT CONFIGURED
+threat_intelligence,GreyNoise,8.8.8.8,NOT CONFIGURED
+threat_intelligence,VirusTotal,http://example-malware.test/payload.exe,NOT CONFIGURED
+threat_intelligence,AlienVault OTX,http://example-malware.test/payload.exe,NOT CONFIGURED
+threat_intelligence,VirusTotal,example-malware.test,NOT CONFIGURED
+threat_intelligence,AlienVault OTX,example-malware.test,NOT CONFIGURED
+timeline,case,Case CASE-2026-0007 created,USER-PROVIDED
+timeline,evidence,Attached investigation: 8,OBSERVED
+timeline,evidence,Attached investigation: 9,OBSERVED
+timeline,evidence,Attached hash: d41d8cd98f00b204e9800998ecf8427e,CALCULATED
+timeline,evidence,Attached ioc: 198.51.100.23,EXTRACTED
+timeline,note,Analyst added note,USER-PROVIDED
+timeline,report,Generated PDF report CASE-2026-0007_fece5a16.pdf,CALCULATED
+timeline,report,Generated JSON report CASE-2026-0007_24bf8038.json,CALCULATED

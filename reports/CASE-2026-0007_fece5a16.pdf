@@ -1,0 +1,225 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3292 >>
+stream
+BT /F2 18 Tf 1 0 0 1 54 738.00 Tm (Cybersecurity Analyst Workbench) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 716.00 Tm (CONFIDENTIAL - INTERNAL USE) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 696.00 Tm (Case ID: CASE-2026-0007) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 682.00 Tm (Title: FINAL ACCEPTANCE - suspicious outbound traffic) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 668.00 Tm (Analyst: analyst) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 654.00 Tm (Date: 2026-09-21 18:25:49 UTC) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 640.00 Tm (Status / Priority: OPEN / HIGH) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 620.00 Tm (Executive Summary) Tj ET
+0.75 w 54 602.00 m 558 602.00 l S
+BT /F1 10 Tf 1 0 0 1 54 594.00 Tm (Case CASE-2026-0007 \('FINAL ACCEPTANCE - suspicious outbound traffic'\) was opened by analyst on) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 580.00 Tm ( 2026-09-21T18:25:42.537455+00:00. The investigation attached 4 evidence item\(s\), 2 indicator\(s) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 566.00 Tm (\), 2 saved investigation\(s\) and 0 NIDS detection\(s\). 0 external threat-intelligence result\(s\) r) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 552.00 Tm (eturned data. All statements below are traceable to the evidence sources listed at the end of t) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 538.00 Tm (his report.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 518.00 Tm (Scope) Tj ET
+0.75 w 54 500.00 m 558 500.00 l S
+BT /F1 10 Tf 1 0 0 1 54 492.00 Tm (Investigated indicators and evidence types: hash, investigation, ioc. Section-30 acceptance wor) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 478.00 Tm (kflow: IP, URL, hash, log, IOCs, notes, report.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 458.00 Tm (Indicators) Tj ET
+0.75 w 54 440.00 m 558 440.00 l S
+BT /F1 10 Tf 1 0 0 1 62 432.00 Tm (- [hash] d41d8cd98f00b204e9800998ecf8427e  \(CALCULATED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 418.00 Tm (- [ioc] 198.51.100.23  \(EXTRACTED\)) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 398.00 Tm (Technical Findings) Tj ET
+0.75 w 54 380.00 m 558 380.00 l S
+BT /F2 10 Tf 1 0 0 1 54 372.00 Tm (* IPV4: 8.8.8.8  \(investigated 2026-09-21T18:24:44.698798+00:00\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 62 358.00 Tm (basic:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 344.00 Tm (valid:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 330.00 Tm (value: True) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 316.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 302.00 Tm (source: local ipaddress validation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 288.00 Tm (version:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 274.00 Tm (value: 4) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 260.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 246.00 Tm (source: local ipaddress validation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 232.00 Tm (is_private:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 218.00 Tm (value: False) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 204.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 190.00 Tm (source: local ipaddress validation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 176.00 Tm (is_reserved:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 162.00 Tm (value: False) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 148.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 134.00 Tm (source: local ipaddress validation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 120.00 Tm (is_loopback:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 106.00 Tm (value: False) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 92.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 78.00 Tm (source: local ipaddress validation) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3034 >>
+stream
+BT /F1 10 Tf 1 0 0 1 70 738.00 Tm (is_multicast:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 724.00 Tm (value: False) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 710.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 696.00 Tm (source: local ipaddress validation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 682.00 Tm (scope:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 668.00 Tm (value: public) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 654.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 640.00 Tm (source: local ipaddress validation) Tj ET
+BT /F2 10 Tf 1 0 0 1 62 626.00 Tm (geolocation:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 612.00 Tm (provider: GeoIP \(ipwho.is\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 598.00 Tm (indicator_type: ip) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 584.00 Tm (indicator: 8.8.8.8) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 570.00 Tm (status: NOT CONFIGURED) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 556.00 Tm (reason: Geolocation provider disabled by configuration.) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 542.00 Tm (retrieved_at: 2026-09-21 18:24:44 UTC) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 528.00 Tm (provenance: UNAVAILABLE) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 514.00 Tm (data:) Tj ET
+BT /F2 10 Tf 1 0 0 1 62 500.00 Tm (reverse_dns:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 486.00 Tm (records:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 472.00 Tm (- dns.google) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 458.00 Tm (provenance: OBSERVED) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 444.00 Tm (source: reverse DNS \(OS resolver\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 430.00 Tm (note: ) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 416.00 Tm (* URL: http://example-malware.test/payload.exe  \(investigated 2026-09-21T18:25:18.949631+00:00\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 62 402.00 Tm (parsed:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 388.00 Tm (valid:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 374.00 Tm (value: True) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 360.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 346.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 332.00 Tm (scheme:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 318.00 Tm (value: http) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 304.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 290.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 276.00 Tm (hostname:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 262.00 Tm (value: example-malware.test) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 248.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 234.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 220.00 Tm (domain:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 206.00 Tm (value: example-malware.test) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 192.00 Tm (provenance: CALCULATED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 178.00 Tm (source: registrable-domain derivation) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 164.00 Tm (port:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 150.00 Tm (value: None) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 136.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 122.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 108.00 Tm (path:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 94.00 Tm (value: /payload.exe) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 80.00 Tm (provenance: EXTRACTED) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 3714 >>
+stream
+BT /F1 10 Tf 1 0 0 1 78 738.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 724.00 Tm (query_parameters:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 710.00 Tm (value:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 696.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 682.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 668.00 Tm (fragment:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 654.00 Tm (value: None) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 640.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 626.00 Tm (source: local URL parse) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 612.00 Tm (username:) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 598.00 Tm (value: None) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 584.00 Tm (provenance: EXTRACTED) Tj ET
+BT /F1 10 Tf 1 0 0 1 78 570.00 Tm (source: local URL parse) Tj ET
+BT /F2 10 Tf 1 0 0 1 62 556.00 Tm (resolved_ips:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 542.00 Tm (records:) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 528.00 Tm (provenance: UNAVAILABLE) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 514.00 Tm (source: DNS A query \(platform resolver\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 70 500.00 Tm (note: No A record returned.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 480.00 Tm (Threat Intelligence) Tj ET
+0.75 w 54 462.00 m 558 462.00 l S
+BT /F2 10 Tf 1 0 0 1 54 454.00 Tm (* VirusTotal - 8.8.8.8: NOT CONFIGURED \(retrieved 2026-09-21 18:24:44 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 440.00 Tm (* AbuseIPDB - 8.8.8.8: NOT CONFIGURED \(retrieved 2026-09-21 18:24:44 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 426.00 Tm (* AlienVault OTX - 8.8.8.8: NOT CONFIGURED \(retrieved 2026-09-21 18:24:44 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 412.00 Tm (* GreyNoise - 8.8.8.8: NOT CONFIGURED \(retrieved 2026-09-21 18:24:44 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 398.00 Tm (* VirusTotal - http://example-malware.test/payload.exe: NOT CONFIGURED \(retrieved 2026-09-21 18) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 384.00 Tm (:25:18 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 370.00 Tm (* AlienVault OTX - http://example-malware.test/payload.exe: NOT CONFIGURED \(retrieved 2026-09-2) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 356.00 Tm (1 18:25:18 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 342.00 Tm (* VirusTotal - example-malware.test: NOT CONFIGURED \(retrieved 2026-09-21 18:25:18 UTC\)) Tj ET
+BT /F2 10 Tf 1 0 0 1 54 328.00 Tm (* AlienVault OTX - example-malware.test: NOT CONFIGURED \(retrieved 2026-09-21 18:25:18 UTC\)) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 308.00 Tm (Network Analysis \(Observed / Scanned\)) Tj ET
+0.75 w 54 290.00 m 558 290.00 l S
+BT /F1 10 Tf 1 0 0 1 54 282.00 Tm (No network detection evidence attached.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 262.00 Tm (Log Analysis) Tj ET
+0.75 w 54 244.00 m 558 244.00 l S
+BT /F1 10 Tf 1 0 0 1 54 236.00 Tm (No log files attached.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 216.00 Tm (Timeline) Tj ET
+0.75 w 54 198.00 m 558 198.00 l S
+BT /F1 10 Tf 1 0 0 1 62 190.00 Tm (2026-09-21T18:25:42.662434+00:00  [case] Case CASE-2026-0007 created  \(USER-PROVIDED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 176.00 Tm (2026-09-21T18:25:43.791302+00:00  [evidence] Attached investigation: 8  \(OBSERVED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 162.00 Tm (2026-09-21T18:25:44.829881+00:00  [evidence] Attached investigation: 9  \(OBSERVED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 148.00 Tm (2026-09-21T18:25:45.958161+00:00  [evidence] Attached hash: d41d8cd98f00b204e9800998ecf8427e  \() Tj ET
+BT /F1 10 Tf 1 0 0 1 62 134.00 Tm (CALCULATED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 120.00 Tm (2026-09-21T18:25:47.147669+00:00  [evidence] Attached ioc: 198.51.100.23  \(EXTRACTED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 106.00 Tm (2026-09-21T18:25:48.105779+00:00  [note] Analyst added note  \(USER-PROVIDED\)) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 86.00 Tm (Analyst Assessment \(Interpretation\)) Tj ET
+0.75 w 54 68.00 m 558 68.00 l S
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 1747 >>
+stream
+BT /F2 10 Tf 1 0 0 1 54 738.00 Tm (2026-09-21T18:25:47.903416+00:00 analyst:) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 724.00 Tm (Analyst assessment: 198.51.100.23 produced 4 auth failures and a /etc/passwd probe in the uploa) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 710.00 Tm (ded access log. Threat-intel providers are NOT CONFIGURED, so no external reputation is asserte) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 696.00 Tm (d; findings rest on observed log evidence only.) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 676.00 Tm (Evidence Sources) Tj ET
+0.75 w 54 658.00 m 558 658.00 l S
+BT /F1 10 Tf 1 0 0 1 62 650.00 Tm (- AbuseIPDB \(NOT CONFIGURED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 636.00 Tm (- AlienVault OTX \(NOT CONFIGURED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 622.00 Tm (- DNS A query \(platform resolver\) \(observed\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 608.00 Tm (- GreyNoise \(NOT CONFIGURED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 594.00 Tm (- VirusTotal \(NOT CONFIGURED\)) Tj ET
+BT /F1 10 Tf 1 0 0 1 62 580.00 Tm (- reverse DNS \(OS resolver\) \(observed\)) Tj ET
+BT /F2 14 Tf 1 0 0 1 54 560.00 Tm (Disclaimer) Tj ET
+0.75 w 54 542.00 m 558 542.00 l S
+BT /F1 10 Tf 1 0 0 1 54 534.00 Tm (Observed facts are measurements made by this platform \(packet capture, DNS/TLS queries, local f) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 520.00 Tm (ile hashing\). Calculated values are derived locally from supplied input. External intelligence ) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 506.00 Tm (is quoted verbatim from the named provider with a retrieval timestamp and may be incomplete or ) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 492.00 Tm (stale. Analyst notes are interpretation and are labelled as such. Absence of a threat-intellige) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 478.00 Tm (nce result does not imply an indicator is safe.) Tj ET
+endstream
+endobj
+xref
+0 13
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000000279 00000 n 
+0000000415 00000 n 
+0000003759 00000 n 
+0000003895 00000 n 
+0000006981 00000 n 
+0000007118 00000 n 
+0000010885 00000 n 
+0000011023 00000 n 
+trailer
+<< /Size 13 /Root 1 0 R >>
+startxref
+12823
+%%EOF

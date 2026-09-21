@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 1. INITIALIZATION & CHARTS ---
     initCharts();
+    setupThemeToggle();
     fetchStats();
     fetchAlerts();
     fetchMonitorStatus();
@@ -253,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td class="mono-cell">#${alert.id || '-'}</td>
                     <td class="mono-cell" title="${rawTs}">${escapeHtml(formattedTime)}</td>
                     <td><span class="severity-badge ${sevClass}">${severity}</span></td>
-                    <td style="font-weight: 600; color: #f8fafc;">${attackType}</td>
+                    <td style="font-weight: 600; color: var(--text-primary);">${attackType}</td>
                     <td class="mono-cell">${srcIp}${alert.source_port ? ':' + escapeHtml(alert.source_port) : ''}</td>
                     <td class="mono-cell">${dstIp}${alert.destination_port ? ':' + escapeHtml(alert.destination_port) : ''}</td>
                     <td class="mono-cell">${protocol}</td>
@@ -310,9 +311,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- 6. CHART.JS VISUALIZATIONS ---
+    // Semantic severity scale (shared with the workbench design system):
+    // CRITICAL red, HIGH orange, MEDIUM amber, LOW green.
+    const SEV_COLORS = { CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#22c55e' };
+
+    function chartTheme() {
+        const light = document.documentElement.getAttribute('data-theme') === 'light';
+        return {
+            text: light ? '#475569' : '#94a3b8',
+            grid: light ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+        };
+    }
+
     function initCharts() {
-        Chart.defaults.color = '#94a3b8';
+        const T = chartTheme();
+        Chart.defaults.color = T.text;
         Chart.defaults.font.family = "'Outfit', sans-serif";
+        const GRID = T.grid;
 
         // Timeline Chart (Attacks Over Time)
         const ctxTimeline = document.getElementById('chart-timeline').getContext('2d');
@@ -335,8 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' } },
-                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, beginAtZero: true, ticks: { precision: 0 } }
+                    x: { grid: { color: GRID } },
+                    y: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
@@ -368,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 labels: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
                 datasets: [{
                     data: [0, 0, 0, 0],
-                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#00f2fe'],
+                    backgroundColor: [SEV_COLORS.CRITICAL, SEV_COLORS.HIGH, SEV_COLORS.MEDIUM, SEV_COLORS.LOW],
                     borderRadius: 6
                 }]
             },
@@ -378,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false } },
-                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, beginAtZero: true, ticks: { precision: 0 } }
+                    y: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
@@ -404,11 +419,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, beginAtZero: true, ticks: { precision: 0 } },
+                    x: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } },
                     y: { grid: { display: false } }
                 }
             }
         });
+    }
+
+    // Re-skin existing charts when the appearance changes (no data reload).
+    function applyChartTheme() {
+        const T = chartTheme();
+        Chart.defaults.color = T.text;
+        [timelineChart, typesChart, severityChart, topAttackersChart].forEach((c) => {
+            if (!c) return;
+            const scales = c.options.scales || {};
+            Object.values(scales).forEach((s) => { if (s && s.grid && s.grid.color !== undefined && s.grid.display !== false) s.grid.color = T.grid; });
+            c.update();
+        });
+    }
+
+    function setupThemeToggle() {
+        if (!window.NIDSTheme) return;
+        NIDSTheme.init();
+        const btn = document.getElementById('btn-theme');
+        const label = document.getElementById('theme-mode-text');
+        const order = ['system', 'light', 'dark'];
+        const pretty = { system: 'System', light: 'Light', dark: 'Dark' };
+        const sync = () => { if (label) label.textContent = pretty[NIDSTheme.current()] || 'System'; };
+        NIDSTheme.onChange(applyChartTheme);
+        NIDSTheme.onChange(sync);
+        sync();
+        if (btn) btn.onclick = () => {
+            const next = order[(order.indexOf(NIDSTheme.current()) + 1) % order.length];
+            NIDSTheme.apply(next);
+        };
     }
 
     // Aggregate charts are sourced from /api/stats (full DB), never fabricated.

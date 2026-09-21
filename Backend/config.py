@@ -146,3 +146,30 @@ REPORT_CLASSIFICATION = os.getenv("REPORT_CLASSIFICATION", "CONFIDENTIAL - INTER
 
 # --- Demo mode (bundled sample data, strictly labeled, never mixed with real) ---
 DEMO_ENABLED = os.getenv("DEMO_ENABLED", "True").lower() in ["true", "1", "yes"]
+
+# --- Google OAuth / OIDC (optional; honest NOT CONFIGURED when absent) ---
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+# Must exactly match an authorized redirect URI in the Google Cloud console.
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "")
+
+# --- Session cookie hardening ---
+# Set True when serving over HTTPS so cookies are Secure.
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "False").lower() in ["true", "1", "yes"]
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "Lax")
+
+# --- Password policy & reset ---
+MIN_PASSWORD_LENGTH = _env_int("MIN_PASSWORD_LENGTH", 8)
+PASSWORD_RESET_TTL_SECONDS = _env_int("PASSWORD_RESET_TTL_SECONDS", 1800)
+# Stricter per-identity throttle for credential submission.
+LOGIN_LIMIT_REQUESTS = _env_int("LOGIN_LIMIT_REQUESTS", 10)
+LOGIN_LIMIT_WINDOW = _env_int("LOGIN_LIMIT_WINDOW", 300)
+
+# --- Outbound mail (password-reset delivery). Optional; when unconfigured the
+# platform states honestly that reset e-mail delivery is unavailable. ---
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = _env_int("SMTP_PORT", 587)
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.getenv("SMTP_FROM", "no-reply@analyst-workbench.local")
+SMTP_STARTTLS = os.getenv("SMTP_STARTTLS", "True").lower() in ["true", "1", "yes"]

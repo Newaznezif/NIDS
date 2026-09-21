@@ -92,6 +92,7 @@ def build_report(case_db_id: int, analyst: str = "") -> dict:
             "classification": ev["classification"],
             "status": case["status"],
             "priority": case["priority"],
+            "report_type": "Case Investigation Report",
         },
         "executive_summary": _summary(ev, iocs),
         "scope": _scope(ev),
@@ -101,10 +102,17 @@ def build_report(case_db_id: int, analyst: str = "") -> dict:
         "network_analysis": _network(ev),
         "log_analysis": _logs(ev),
         "detection_evidence": ev["nids_alerts"],
+        "evidence_items": [{"type": i["item_type"], "ref": i["item_ref"], "label": i["label"],
+                            "provenance": i["provenance"], "added_at": i["added_at"]}
+                           for i in ev["items"]],
+        "geographic": _geographic(ev),
         "timeline": ev["timeline"],
         "analyst_notes": [{"author": n["author"], "created_at": n["created_at"], "body": n["body"]}
                           for n in ev["notes"]],
+        "risk_context": _risk_context(ev, iocs),
+        "recommendations": _recommendations(ev),
         "evidence_sources": _sources(ev),
+        "metadata": _metadata(ev, iocs),
         "disclaimer": (
             "Observed facts are measurements made by this platform (packet capture, DNS/TLS "
             "queries, local file hashing). Calculated values are derived locally from supplied "
@@ -113,6 +121,113 @@ def build_report(case_db_id: int, analyst: str = "") -> dict:
             "and are labelled as such. Absence of a threat-intelligence result does not imply an "
             "indicator is safe."
         ),
+    }
+
+
+def _geographic(ev) -> list:
+    """Geolocation rows ONLY where a provider actually returned coordinates.
+    Nothing is inferred or fabricated; missing geolocation is simply absent."""
+    rows = []
+    for inv in ev["investigations"]:
+        geo = (inv["result"] or {}).get("geolocation")
+        if not isinstance(geo, dict) or geo.get("status") != "OK":
+            continue
+        d = geo.get("data") or {}
+        if d.get("latitude") is None or d.get("longitude") is None:
+            continue
+        rows.append({
+            "indicator": inv["ioc_value"],
+            "country": d.get("country") or "Unavailable",
+            "country_code": d.get("country_code") or "",
+            "region": d.get("region") or "",
+            "city": d.get("city") or "",
+            "latitude": d.get("latitude"),
+            "longitude": d.get("longitude"),
+            "asn": str(d.get("asn") or "") or "Unavailable",
+            "organization": d.get("organization") or d.get("isp") or "Unavailable",
+            "provider": geo.get("provider") or "",
+            "provenance": "EXTERNAL INTELLIGENCE",
+        })
+    return rows
+
+
+_SEV_ORDER = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1, "INFO": 0}
+
+
+def _risk_context(ev, iocs) -> dict:
+    """Risk context derived strictly from attached evidence. Empty when there is
+    no observed detection or external intelligence to describe."""
+    alerts = ev["nids_alerts"]
+    counts = {}
+    for a in alerts:
+        sev = (a.get("severity") or "INFO").upper()
+        counts[sev] = counts.get(sev, 0) + 1
+    ti_ok = sum(1 for inv in ev["investigations"]
+                for r in (inv["result"].get("threat_intelligence") or []) if r.get("status") == "OK")
+    if not alerts and not ti_ok:
+        return {}
+    highest = "INFO"
+    for sev in counts:
+        if _SEV_ORDER.get(sev, 0) > _SEV_ORDER.get(highest, 0):
+            highest = sev
+    return {
+        "observed_detections": len(alerts),
+        "severity_counts": counts,
+        "highest_observed_severity": highest,
+        "external_intel_results": ti_ok,
+        "indicators": len(iocs),
+        "statement": (
+            f"This case carries {len(alerts)} observed NIDS detection(s) and {ti_ok} external "
+            f"threat-intelligence result(s) that returned data. The highest severity observed in "
+            f"attached evidence is {highest}. Risk context reflects only the evidence attached to "
+            f"this case and is not a network-wide assessment."
+        ),
+    }
+
+
+def _recommendations(ev) -> list:
+    """Actionable, evidence-bound recommendations. Each references a real value
+    from the attached evidence; the section is omitted when nothing supports it."""
+    recs = []
+    seen = set()
+    for a in ev["nids_alerts"]:
+        sev = (a.get("severity") or "").upper()
+        src = a.get("source_ip")
+        if sev in ("CRITICAL", "HIGH") and src and src not in seen:
+            seen.add(src)
+            recs.append({
+                "action": f"Review traffic from {src} and consider blocking or rate-limiting it.",
+                "basis": f"Observed {a.get('attack_type')} ({sev}) in attached NIDS evidence.",
+                "provenance": "OBSERVED",
+            })
+    for inv in ev["investigations"]:
+        for r in (inv["result"].get("threat_intelligence") or []):
+            if r.get("status") == "OK":
+                recs.append({
+                    "action": f"Corroborate the {r.get('provider')} result for {r.get('indicator')} "
+                              f"before applying enforcement.",
+                    "basis": f"External intelligence returned data (retrieved {r.get('retrieved_at')}).",
+                    "provenance": "EXTERNAL INTELLIGENCE",
+                })
+    return recs
+
+
+def _metadata(ev, iocs) -> dict:
+    case = ev["case"]
+    return {
+        "case_id": case["case_id"],
+        "case_db_id": case.get("id"),
+        "generated_at": ev["generated_at"],
+        "analyst": case.get("analyst") or "",
+        "classification": ev["classification"] or "",
+        "evidence_items": len(ev["items"]),
+        "indicators": len(iocs),
+        "saved_investigations": len(ev["investigations"]),
+        "nids_detections": len(ev["nids_alerts"]),
+        "analyst_notes": len(ev["notes"]),
+        "timeline_events": len(ev["timeline"]),
+        "schema_version": "2.0",
+        "generator": "Cybersecurity Analyst Platform report engine",
     }
 
 
@@ -199,109 +314,226 @@ def _sources(ev) -> list:
 
 # --- renderers ---
 
+_SEV_COLOR = {
+    "CRITICAL": "#ef4444", "HIGH": "#f97316", "MEDIUM": "#f59e0b",
+    "LOW": "#22c55e", "INFO": "#3b82f6",
+}
+_PROV_COLOR = {
+    "OBSERVED": "#2563eb", "CALCULATED": "#16a34a", "EXTRACTED": "#16a34a",
+    "EXTERNAL INTELLIGENCE": "#7c3aed", "INFERRED": "#7c3aed",
+    "USER PROVIDED": "#d97706", "USER-PROVIDED": "#d97706", "UNAVAILABLE": "#94a3b8",
+}
+
+
+def _sev_badge(sev):
+    s = (sev or "INFO").upper()
+    return {"text": s, "color": _SEV_COLOR.get(s, "#3b82f6"), "badge": True}
+
+
+def _prov(prov):
+    p = (prov or "UNAVAILABLE").upper()
+    return {"text": p, "color": _PROV_COLOR.get(p, "#94a3b8"), "badge": True}
+
+
+def _flatten(obj, prefix=""):
+    """Walk a result dict into (label, value, provenance) leaf tuples."""
+    out = []
+    if isinstance(obj, dict):
+        if "value" in obj and "provenance" in obj:
+            out.append((prefix or "value", str(obj.get("value")), obj.get("provenance")))
+            return out
+        for k, v in obj.items():
+            if k in ("provenance", "source"):
+                continue
+            label = f"{prefix}.{k}" if prefix else k
+            out.extend(_flatten(v, label))
+    elif isinstance(obj, list):
+        for idx, v in enumerate(obj[:20]):
+            out.extend(_flatten(v, f"{prefix}[{idx}]"))
+    else:
+        if obj is not None and str(obj) != "":
+            out.append((prefix or "value", str(obj), None))
+    return out
+
+
 def render_pdf(report: dict) -> bytes:
+    from . import branding
     doc = PDFDocument(report["cover"]["title"])
+    doc.cover(report["cover"])
+
+    # 1. Executive Summary
+    doc.section("Executive Summary")
+    doc.line(report["executive_summary"], size=10)
+
+    # 2. Investigation Overview
+    doc.section("Investigation Overview")
     c = report["cover"]
-    doc.line(c["platform"], size=18, bold=True)
-    doc.line(c["classification"], size=10, bold=True)
-    doc.spacer(6)
-    doc.line(f"Case ID: {c['case_id']}")
-    doc.line(f"Title: {c['title']}")
-    doc.line(f"Analyst: {c['analyst']}")
-    doc.line(f"Date: {c['date']}")
-    doc.line(f"Status / Priority: {c['status']} / {c['priority']}")
+    doc.label_value([
+        ("Investigation ID", c["case_id"]),
+        ("Case title", c["title"] or "Unavailable"),
+        ("Analyst", c["analyst"] or "Unavailable"),
+        ("Report status", c["status"] or "Unavailable"),
+        ("Priority", c["priority"] or "Unavailable"),
+    ], label_w=130)
+    if c.get("classification"):
+        doc.label_value([("Classification", c["classification"])], label_w=130)
+    doc.spacer(2)
+    doc.line(report["scope"], size=9.5, color=branding.MUTED)
 
-    doc.heading("Executive Summary")
-    doc.line(report["executive_summary"])
-
-    doc.heading("Scope")
-    doc.line(report["scope"])
-
-    doc.heading("Indicators")
+    # 3. Artifact Information
     if report["indicators"]:
-        for i in report["indicators"]:
-            doc.line(f"- [{i['type']}] {i['value']}  ({i['provenance']})", indent=8)
-    else:
-        doc.line("No indicators attached.")
+        doc.section("Artifact Information")
+        doc.table(["Type", "Value", "Provenance"],
+                  [[i["type"].upper(), i["value"], _prov(i["provenance"])] for i in report["indicators"]],
+                  widths=[80, 300, 124], aligns=["left", "left", "center"])
 
-    doc.heading("Technical Findings")
+    # 4. Findings
     if report["technical_findings"]:
+        doc.section("Findings")
         for f in report["technical_findings"]:
-            doc.line(f"* {f['type'].upper()}: {f['indicator']}  (investigated {f['investigated_at']})", bold=True)
+            doc.subheading(f"{f['type'].upper()} \u2014 {f['indicator']}")
+            doc.line(f"Investigated {f['investigated_at']}", size=8.5, color=branding.MUTED)
+            rows = []
             for section, val in f["fields"].items():
-                doc.line(f"{section}:", indent=8, bold=True)
-                _dump(doc, val, indent=16)
-    else:
-        doc.line("No technical findings recorded.")
+                for label, value, prov in _flatten(val, section):
+                    rows.append([label, value, _prov(prov) if prov else {"text": "OBSERVED", "color": "#2563eb", "badge": True}])
+            if rows:
+                doc.table(["Field", "Value", "Provenance"], rows,
+                          widths=[150, 240, 114], aligns=["left", "left", "center"])
+            else:
+                doc.line("No structured fields returned for this artifact.", size=9, color=branding.MUTED)
+            doc.spacer(4)
 
-    doc.heading("Threat Intelligence")
+    # 5. Evidence
+    if report["detection_evidence"] or report["log_analysis"] or report.get("evidence_items"):
+        doc.section("Evidence")
+        if report.get("evidence_items"):
+            doc.subheading("Attached evidence items")
+            doc.table(["Type", "Reference", "Label", "Provenance", "Added"],
+                      [[e["type"].upper(), e["ref"], e["label"] or "", _prov(e["provenance"]), e["added_at"]]
+                       for e in report["evidence_items"]],
+                      widths=[70, 150, 120, 96, 108], aligns=["left", "left", "left", "center", "left"])
+        if report["detection_evidence"]:
+            doc.subheading("Observed NIDS detections")
+            doc.table(["Severity", "Attack type", "Source", "Destination", "Proto", "First seen"],
+                      [[_sev_badge(n.get("severity")), n.get("attack_type", ""),
+                        n.get("source_ip", ""), f"{n.get('destination_ip','')}:{n.get('destination_port','')}",
+                        n.get("protocol", ""), n.get("first_seen", "")]
+                       for n in report["detection_evidence"]],
+                      widths=[78, 110, 100, 130, 44, 110],
+                      aligns=["center", "left", "left", "left", "left", "left"])
+        if report["log_analysis"]:
+            doc.subheading("Attached log evidence")
+            doc.table(["Label", "Reference"],
+                      [[l.get("label", ""), l.get("ref", "")] for l in report["log_analysis"]],
+                      widths=[260, 244])
+
+    # 6. Intelligence / Enrichment
     if report["threat_intelligence"]:
+        doc.section("Intelligence / Enrichment")
+        doc.line("External intelligence is quoted verbatim from the named provider and is labelled "
+                 "EXTERNAL INTELLIGENCE. It is not observed network evidence.", size=8.5, color=branding.MUTED)
         for t in report["threat_intelligence"]:
-            doc.line(f"* {t['provider']} - {t['indicator']}: {t['status']} (retrieved {t['retrieved_at']})", bold=True)
-            _dump(doc, t.get("data", {}), indent=16)
-    else:
-        doc.line("No external threat-intelligence results returned.")
+            doc.subheading(f"{t['provider']} \u2014 {t['indicator']}")
+            doc.line(f"Status: {t['status']}   Retrieved: {t['retrieved_at']}", size=8.5, color=branding.MUTED)
+            rows = [[label, value] for label, value, _p in _flatten(t.get("data", {}))]
+            if rows:
+                doc.table(["Field", "Value"], rows, widths=[180, 324])
+            else:
+                doc.line("No data returned by this provider for the indicator.", size=9, color=branding.MUTED)
+            doc.spacer(4)
 
-    doc.heading("Network Analysis (Observed / Scanned)")
-    if report["network_analysis"]:
-        for n in report["network_analysis"]:
-            doc.line(f"* {n['source']}: {n['attack_type']} {n['severity']} "
-                     f"{n['source_ip']} -> {n['destination_ip']}:{n['destination_port']}/{n['protocol']}")
-            _dump(doc, n.get("evidence", {}), indent=16)
-    else:
-        doc.line("No network detection evidence attached.")
+    # 7. Geographic Information
+    if report["geographic"]:
+        doc.section("Geographic Information")
+        doc.line("Geolocation is EXTERNAL INTELLIGENCE returned by the named provider for the "
+                 "investigated artifact. Coordinates are reported as returned; nothing is estimated. "
+                 "A structured summary is provided in place of a map image.", size=8.5, color=branding.MUTED)
+        doc.table(["Indicator", "Country", "City", "ASN", "Organization", "Lat", "Lon"],
+                  [[g["indicator"], g["country"], g["city"] or "Unavailable", g["asn"],
+                    g["organization"], g["latitude"], g["longitude"]] for g in report["geographic"]],
+                  widths=[92, 92, 84, 60, 96, 40, 40],
+                  aligns=["left", "left", "left", "left", "left", "right", "right"])
+        doc.spacer(2)
+        for g in report["geographic"]:
+            doc.line(f"{g['indicator']} \u2014 provider {g['provider'] or 'Unavailable'} "
+                     f"({g['provenance']}); region {g['region'] or 'Unavailable'}; "
+                     f"country code {g['country_code'] or 'Unavailable'}.", size=8.5, color=branding.MUTED)
 
-    doc.heading("Log Analysis")
-    if report["log_analysis"]:
-        for l in report["log_analysis"]:
-            doc.line(f"- {l['label']} ({l['ref']})")
-    else:
-        doc.line("No log files attached.")
+    # 8. Timeline
+    if report["timeline"]:
+        doc.section("Timeline")
+        doc.table(["When", "Kind", "Summary", "Provenance"],
+                  [[t["ts"], t["kind"], t["summary"], _prov(t.get("provenance") or t.get("source"))]
+                   for t in report["timeline"]],
+                  widths=[110, 70, 220, 104], aligns=["left", "left", "left", "center"])
 
-    doc.heading("Timeline")
-    for t in report["timeline"]:
-        doc.line(f"{t['ts']}  [{t['kind']}] {t['summary']}  ({t['provenance'] or t['source']})", indent=8)
-    if not report["timeline"]:
-        doc.line("No timeline events recorded.")
-
-    doc.heading("Analyst Assessment (Interpretation)")
+    # 9. Analyst Notes
     if report["analyst_notes"]:
+        doc.section("Analyst Notes")
+        doc.line("Analyst notes are interpretation, labelled USER PROVIDED, and are distinct from "
+                 "observed or calculated facts.", size=8.5, color=branding.MUTED)
         for n in report["analyst_notes"]:
-            doc.line(f"{n['created_at']} {n['author']}:", bold=True)
-            doc.line(n["body"], indent=8)
-    else:
-        doc.line("No analyst notes recorded.")
+            doc.subheading(f"{n['author']} \u2014 {n['created_at']}")
+            doc.line(n["body"], size=9.5)
+            doc.spacer(3)
 
-    doc.heading("Evidence Sources")
-    for s in report["evidence_sources"]:
-        doc.line(f"- {s}", indent=8)
-    if not report["evidence_sources"]:
-        doc.line("No external or observed sources were used.")
+    # 10. Impact / Risk Context
+    if report.get("risk_context"):
+        doc.section("Impact / Risk Context")
+        rc = report["risk_context"]
+        doc.line(rc["statement"], size=10)
+        doc.spacer(2)
+        sev_rows = [[_sev_badge(sev), str(cnt)] for sev, cnt in
+                    sorted(rc["severity_counts"].items(), key=lambda kv: -_SEV_ORDER.get(kv[0], 0))]
+        if sev_rows:
+            doc.table(["Severity", "Observed detections"], sev_rows, widths=[160, 160],
+                      aligns=["center", "left"])
 
-    doc.heading("Disclaimer")
-    doc.line(report["disclaimer"])
+    # 11. Recommendations
+    if report.get("recommendations"):
+        doc.section("Recommendations")
+        doc.table(["Recommended action", "Evidence basis", "Provenance"],
+                  [[r["action"], r["basis"], _prov(r["provenance"])] for r in report["recommendations"]],
+                  widths=[210, 200, 94], aligns=["left", "left", "center"])
+
+    # 12. Data Provenance
+    doc.section("Data Provenance")
+    doc.line("Provenance legend:", size=9.5, bold=True)
+    legend = [("OBSERVED", "Measured directly by this platform (capture, DNS, hashing)."),
+              ("CALCULATED", "Derived locally from supplied input."),
+              ("EXTERNAL INTELLIGENCE", "Quoted from a named provider with a retrieval timestamp."),
+              ("USER PROVIDED", "Analyst-supplied interpretation or attachment."),
+              ("UNAVAILABLE", "No data was returned; never fabricated.")]
+    doc.table(["Label", "Meaning"],
+              [[{"text": k, "color": _PROV_COLOR.get(k, "#94a3b8"), "badge": True}, v] for k, v in legend],
+              widths=[150, 354], aligns=["center", "left"])
+    if report["evidence_sources"]:
+        doc.subheading("Sources used")
+        for s in report["evidence_sources"]:
+            doc.line(f"\u2022 {s}", size=9, indent=8)
+    doc.spacer(3)
+    doc.line(report["disclaimer"], size=8.5, color=branding.MUTED, italic=True)
+
+    # 13. Report Metadata
+    doc.section("Report Metadata")
+    md = report["metadata"]
+    doc.label_value([
+        ("Investigation ID", md["case_id"]),
+        ("Generated (UTC)", md["generated_at"]),
+        ("Analyst", md["analyst"] or "Unavailable"),
+        ("Classification", md["classification"] or "Not configured"),
+        ("Evidence items", str(md["evidence_items"])),
+        ("Indicators", str(md["indicators"])),
+        ("Saved investigations", str(md["saved_investigations"])),
+        ("NIDS detections", str(md["nids_detections"])),
+        ("Analyst notes", str(md["analyst_notes"])),
+        ("Timeline events", str(md["timeline_events"])),
+        ("Report schema", md["schema_version"]),
+        ("Generator", md["generator"]),
+    ], label_w=150)
 
     return doc.render()
-
-
-def _dump(doc: PDFDocument, obj, indent=8, depth=0):
-    if depth > 3:
-        return
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if isinstance(v, (dict, list)):
-                doc.line(f"{k}:", indent=indent)
-                _dump(doc, v, indent + 8, depth + 1)
-            else:
-                doc.line(f"{k}: {v}", indent=indent)
-    elif isinstance(obj, list):
-        for item in obj[:20]:
-            if isinstance(item, (dict, list)):
-                _dump(doc, item, indent, depth + 1)
-            else:
-                doc.line(f"- {item}", indent=indent)
-    else:
-        doc.line(str(obj), indent=indent)
 
 
 def render_json(report: dict) -> str:
@@ -319,6 +551,9 @@ def render_csv(report: dict) -> str:
     for n in report["network_analysis"]:
         w.writerow(["network", n["attack_type"],
                     f"{n['source_ip']}->{n['destination_ip']}:{n['destination_port']}", "OBSERVED"])
+    for g in report.get("geographic", []):
+        w.writerow(["geographic", g["indicator"],
+                    f"{g['country']}|{g['city']}|{g['latitude']},{g['longitude']}", g["provenance"]])
     for e in report["timeline"]:
         w.writerow(["timeline", e["kind"], e["summary"], e["provenance"] or e["source"]])
     return buf.getvalue()

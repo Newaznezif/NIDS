@@ -1,0 +1,253 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 6647 >>
+stream
+0.055 0.455 0.565 rg 0 786.00 612 6 re f
+0.055 0.455 0.565 rg 54.00 694.00 40.00 40.00 re f
+1 1 1 rg 74.00 726.80 m 86.00 721.20 l 86.00 711.60 l 74.00 701.20 l 62.00 711.60 l 62.00 721.20 l h f
+0.055 0.455 0.565 RG 3.60 w 68.40 714.00 m 72.40 710.00 l 80.40 718.80 l S
+BT 0.059 0.090 0.165 rg /F2 15 Tf 1 0 0 1 106.00 718.00 Tm (Cybersecurity Analyst Platform) Tj ET
+BT 0.392 0.455 0.545 rg /F1 9 Tf 1 0 0 1 106.00 700.00 Tm (Threat Investigation & Intelligence Reporting) Tj ET
+BT 0.055 0.455 0.565 rg /F2 20 Tf 1 0 0 1 54.00 676.00 Tm (INVESTIGATION REPORT) Tj ET
+BT 0.059 0.090 0.165 rg /F1 13 Tf 1 0 0 1 54.00 652.00 Tm (Test case) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 632.00 m 558 632.00 l S
+0.855 0.918 0.933 rg 416.92 620.00 141.08 16 re f
+BT 0.055 0.455 0.565 rg /F2 8.5 Tf 1 0 0 1 424.92 624.00 Tm (CONFIDENTIAL - INTERNAL USE) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 600.00 Tm (Investigation ID) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 600.00 Tm (CASE-2026-0009) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 586.50 Tm (Report type) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 586.50 Tm (Case Investigation Report) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 573.00 Tm (Generated) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 573.00 Tm (2026-09-21 19:25:02 UTC) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 559.50 Tm (Analyst) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 559.50 Tm (analyst) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 546.00 Tm (Status) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 546.00 Tm (OPEN) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 532.50 Tm (Priority) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 174.00 532.50 Tm (MEDIUM) Tj ET
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 505.00 Tm (1. Executive Summary) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 488.00 m 558 488.00 l S
+BT 0.059 0.090 0.165 rg /F1 10 Tf 1 0 0 1 54.00 481.00 Tm (Case CASE-2026-0009 \('Test case'\) was opened by analyst on 2026-09-21T19:25:02.249127+00:00. The) Tj ET
+BT 0.059 0.090 0.165 rg /F1 10 Tf 1 0 0 1 54.00 467.50 Tm (investigation attached 1 evidence item\(s\), 1 indicator\(s\), 0 saved investigation\(s\) and 0 NIDS) Tj ET
+BT 0.059 0.090 0.165 rg /F1 10 Tf 1 0 0 1 54.00 454.00 Tm (detection\(s\). 0 external threat-intelligence result\(s\) returned data. All statements below are) Tj ET
+BT 0.059 0.090 0.165 rg /F1 10 Tf 1 0 0 1 54.00 440.50 Tm (traceable to the evidence sources listed at the end of this report.) Tj ET
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 419.00 Tm (2. Investigation Overview) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 402.00 m 558 402.00 l S
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 395.00 Tm (Investigation ID) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 395.00 Tm (CASE-2026-0009) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 381.50 Tm (Case title) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 381.50 Tm (Test case) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 368.00 Tm (Analyst) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 368.00 Tm (analyst) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 354.50 Tm (Report status) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 354.50 Tm (OPEN) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 341.00 Tm (Priority) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 341.00 Tm (MEDIUM) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 327.50 Tm (Classification) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 184.00 327.50 Tm (CONFIDENTIAL - INTERNAL USE) Tj ET
+BT 0.392 0.455 0.545 rg /F1 9.5 Tf 1 0 0 1 54.00 312.00 Tm (Investigated indicators and evidence types: ip. scope) Tj ET
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 291.00 Tm (3. Artifact Information) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 274.00 m 558 274.00 l S
+0.945 0.961 0.976 rg 54 245.00 504 22.00 re f
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 59.00 253.00 Tm (Type) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 139.00 253.00 Tm (Value) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 439.00 253.00 Tm (Provenance) Tj ET
+0.055 0.455 0.565 RG 1 w 54 245.00 m 558 245.00 l S
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 231.00 Tm (IP) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 139.00 231.00 Tm (203.0.113.5) Tj ET
+0.843 0.886 0.984 rg 439.00 228.50 42.70 12.50 re f
+BT 0.145 0.388 0.922 rg /F2 7.5 Tf 1 0 0 1 444.00 231.00 Tm (OBSERVED) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 223.00 m 558 223.00 l S
+0.796 0.835 0.882 RG 0.5 w 134.00 245.00 m 134.00 223.00 l S
+0.796 0.835 0.882 RG 0.5 w 434.00 245.00 m 434.00 223.00 l S
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 211.00 Tm (4. Evidence) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 194.00 m 558 194.00 l S
+BT 0.059 0.090 0.165 rg /F2 11 Tf 1 0 0 1 54.00 184.00 Tm (Attached evidence items) Tj ET
+0.945 0.961 0.976 rg 54 147.00 504 22.00 re f
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 59.00 155.00 Tm (Type) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 123.85 155.00 Tm (Reference) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 262.82 155.00 Tm (Label) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 374.00 155.00 Tm (Provenance) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 462.94 155.00 Tm (Added) Tj ET
+0.055 0.455 0.565 RG 1 w 54 147.00 m 558 147.00 l S
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 133.00 Tm (IP) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 123.85 133.00 Tm (203.0.113.5) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 262.82 133.00 Tm (203.0.113.5) Tj ET
+0.843 0.886 0.984 rg 374.00 130.50 42.70 12.50 re f
+BT 0.145 0.388 0.922 rg /F2 7.5 Tf 1 0 0 1 379.00 133.00 Tm (OBSERVED) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 462.94 133.00 Tm (2026-09-21T19:25:02) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 462.94 121.00 Tm (.283355+00:00) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 113.00 m 558 113.00 l S
+0.796 0.835 0.882 RG 0.5 w 118.85 147.00 m 118.85 113.00 l S
+0.796 0.835 0.882 RG 0.5 w 257.82 147.00 m 257.82 113.00 l S
+0.796 0.835 0.882 RG 0.5 w 369.00 147.00 m 369.00 113.00 l S
+0.796 0.835 0.882 RG 0.5 w 457.94 147.00 m 457.94 113.00 l S
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 101.00 Tm (5. Timeline) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 84.00 m 558 84.00 l S
+0.796 0.835 0.882 RG 0.75 w 54 54.00 m 558 54.00 l S
+BT 0.392 0.455 0.545 rg /F1 7.5 Tf 1 0 0 1 54.00 42.00 Tm (Cybersecurity Analyst Platform  �  Investigation ID: CASE-2026-0009  �  Generated: 2026-09-21 19:25:02 UTC) Tj ET
+BT 0.059 0.090 0.165 rg /F2 7.5 Tf 1 0 0 1 513.04 42.00 Tm (Page 1 of 2) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 8935 >>
+stream
+0.055 0.455 0.565 rg 54.00 742.00 16.00 16.00 re f
+1 1 1 rg 62.00 755.12 m 66.80 752.88 l 66.80 749.04 l 62.00 744.88 l 57.20 749.04 l 57.20 752.88 l h f
+0.055 0.455 0.565 RG 1.44 w 59.76 750.00 m 61.36 748.40 l 64.56 751.92 l S
+BT 0.392 0.455 0.545 rg /F2 9 Tf 1 0 0 1 78.00 746.00 Tm (Cybersecurity Analyst Platform) Tj ET
+BT 0.392 0.455 0.545 rg /F1 9 Tf 1 0 0 1 494.37 746.00 Tm (CASE-2026-0009) Tj ET
+0.796 0.835 0.882 RG 0.75 w 54 736.00 m 558 736.00 l S
+0.945 0.961 0.976 rg 54 712.00 504 22.00 re f
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 59.00 720.00 Tm (When) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 169.00 720.00 Tm (Kind) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 239.00 720.00 Tm (Summary) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 459.00 720.00 Tm (Provenance) Tj ET
+0.055 0.455 0.565 RG 1 w 54 712.00 m 558 712.00 l S
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 698.00 Tm (2026-09-21T19:25:02.26) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 686.00 Tm (0842+00:00) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 169.00 698.00 Tm (case) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 239.00 698.00 Tm (Case CASE-2026-0009 created) Tj ET
+0.973 0.902 0.824 rg 459.00 695.50 63.14 12.50 re f
+BT 0.851 0.467 0.024 rg /F2 7.5 Tf 1 0 0 1 464.00 698.00 Tm (USER-PROVIDED) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 678.00 m 558 678.00 l S
+0.796 0.835 0.882 RG 0.5 w 164.00 712.00 m 164.00 678.00 l S
+0.796 0.835 0.882 RG 0.5 w 234.00 712.00 m 234.00 678.00 l S
+0.796 0.835 0.882 RG 0.5 w 454.00 712.00 m 454.00 678.00 l S
+0.973 0.980 0.988 rg 54 644.00 504 34.00 re f
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 664.00 Tm (2026-09-21T19:25:02.29) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 652.00 Tm (2906+00:00) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 169.00 664.00 Tm (evidence) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 239.00 664.00 Tm (Attached ip: 203.0.113.5) Tj ET
+0.843 0.886 0.984 rg 459.00 661.50 42.70 12.50 re f
+BT 0.145 0.388 0.922 rg /F2 7.5 Tf 1 0 0 1 464.00 664.00 Tm (OBSERVED) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 644.00 m 558 644.00 l S
+0.796 0.835 0.882 RG 0.5 w 164.00 678.00 m 164.00 644.00 l S
+0.796 0.835 0.882 RG 0.5 w 234.00 678.00 m 234.00 644.00 l S
+0.796 0.835 0.882 RG 0.5 w 454.00 678.00 m 454.00 644.00 l S
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 630.00 Tm (2026-09-21T19:25:02.32) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 59.00 618.00 Tm (7686+00:00) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 169.00 630.00 Tm (note) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 239.00 630.00 Tm (Analyst added note) Tj ET
+0.973 0.902 0.824 rg 459.00 627.50 63.14 12.50 re f
+BT 0.851 0.467 0.024 rg /F2 7.5 Tf 1 0 0 1 464.00 630.00 Tm (USER-PROVIDED) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 610.00 m 558 610.00 l S
+0.796 0.835 0.882 RG 0.5 w 164.00 644.00 m 164.00 610.00 l S
+0.796 0.835 0.882 RG 0.5 w 234.00 644.00 m 234.00 610.00 l S
+0.796 0.835 0.882 RG 0.5 w 454.00 644.00 m 454.00 610.00 l S
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 598.00 Tm (6. Analyst Notes) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 581.00 m 558 581.00 l S
+BT 0.392 0.455 0.545 rg /F1 8.5 Tf 1 0 0 1 54.00 574.00 Tm (Analyst notes are interpretation, labelled USER PROVIDED, and are distinct from observed or calculated facts.) Tj ET
+BT 0.059 0.090 0.165 rg /F2 11 Tf 1 0 0 1 54.00 559.00 Tm (analyst - 2026-09-21T19:25:02.318164+00:00) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 54.00 544.00 Tm (analyst interpretation) Tj ET
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 520.00 Tm (7. Data Provenance) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 503.00 m 558 503.00 l S
+BT 0.059 0.090 0.165 rg /F2 9.5 Tf 1 0 0 1 54.00 496.00 Tm (Provenance legend:) Tj ET
+0.945 0.961 0.976 rg 54 461.00 504 22.00 re f
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 59.00 469.00 Tm (Label) Tj ET
+BT 0.059 0.090 0.165 rg /F2 9 Tf 1 0 0 1 209.00 469.00 Tm (Meaning) Tj ET
+0.055 0.455 0.565 RG 1 w 54 461.00 m 558 461.00 l S
+0.843 0.886 0.984 rg 59.00 444.50 42.70 12.50 re f
+BT 0.145 0.388 0.922 rg /F2 7.5 Tf 1 0 0 1 64.00 447.00 Tm (OBSERVED) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 209.00 447.00 Tm (Measured directly by this platform \(capture, DNS, hashing\).) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 439.00 m 558 439.00 l S
+0.796 0.835 0.882 RG 0.5 w 204.00 461.00 m 204.00 439.00 l S
+0.973 0.980 0.988 rg 54 417.00 504 22.00 re f
+0.835 0.933 0.871 rg 59.00 422.50 50.88 12.50 re f
+BT 0.086 0.639 0.290 rg /F2 7.5 Tf 1 0 0 1 64.00 425.00 Tm (CALCULATED) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 209.00 425.00 Tm (Derived locally from supplied input.) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 417.00 m 558 417.00 l S
+0.796 0.835 0.882 RG 0.5 w 204.00 439.00 m 204.00 417.00 l S
+0.906 0.859 0.984 rg 59.00 400.50 95.84 12.50 re f
+BT 0.486 0.227 0.929 rg /F2 7.5 Tf 1 0 0 1 64.00 403.00 Tm (EXTERNAL INTELLIGENCE) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 209.00 403.00 Tm (Quoted from a named provider with a retrieval timestamp.) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 395.00 m 558 395.00 l S
+0.796 0.835 0.882 RG 0.5 w 204.00 417.00 m 204.00 395.00 l S
+0.973 0.980 0.988 rg 54 373.00 504 22.00 re f
+0.973 0.902 0.824 rg 59.00 378.50 63.14 12.50 re f
+BT 0.851 0.467 0.024 rg /F2 7.5 Tf 1 0 0 1 64.00 381.00 Tm (USER PROVIDED) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 209.00 381.00 Tm (Analyst-supplied interpretation or attachment.) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 373.00 m 558 373.00 l S
+0.796 0.835 0.882 RG 0.5 w 204.00 395.00 m 204.00 373.00 l S
+0.922 0.933 0.949 rg 59.00 356.50 54.96 12.50 re f
+BT 0.580 0.639 0.722 rg /F2 7.5 Tf 1 0 0 1 64.00 359.00 Tm (UNAVAILABLE) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9 Tf 1 0 0 1 209.00 359.00 Tm (No data was returned; never fabricated.) Tj ET
+0.796 0.835 0.882 RG 0.5 w 54 351.00 m 558 351.00 l S
+0.796 0.835 0.882 RG 0.5 w 204.00 373.00 m 204.00 351.00 l S
+BT 0.392 0.455 0.545 rg /F3 8.5 Tf 1 0 0 1 54.00 344.00 Tm (Observed facts are measurements made by this platform \(packet capture, DNS/TLS queries, local file hashing\).) Tj ET
+BT 0.392 0.455 0.545 rg /F3 8.5 Tf 1 0 0 1 54.00 332.00 Tm (Calculated values are derived locally from supplied input. External intelligence is quoted verbatim from the named) Tj ET
+BT 0.392 0.455 0.545 rg /F3 8.5 Tf 1 0 0 1 54.00 320.00 Tm (provider with a retrieval timestamp and may be incomplete or stale. Analyst notes are interpretation and are labelled) Tj ET
+BT 0.392 0.455 0.545 rg /F3 8.5 Tf 1 0 0 1 54.00 308.00 Tm (as such. Absence of a threat-intelligence result does not imply an indicator is safe.) Tj ET
+BT 0.055 0.455 0.565 rg /F2 13 Tf 1 0 0 1 54.00 288.00 Tm (8. Report Metadata) Tj ET
+0.055 0.455 0.565 RG 1.0 w 54 271.00 m 558 271.00 l S
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 264.00 Tm (Investigation ID) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 264.00 Tm (CASE-2026-0009) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 250.50 Tm (Generated \(UTC\)) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 250.50 Tm (2026-09-21 19:25:02 UTC) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 237.00 Tm (Analyst) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 237.00 Tm (analyst) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 223.50 Tm (Classification) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 223.50 Tm (CONFIDENTIAL - INTERNAL USE) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 210.00 Tm (Evidence items) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 210.00 Tm (1) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 196.50 Tm (Indicators) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 196.50 Tm (1) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 183.00 Tm (Saved investigations) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 183.00 Tm (0) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 169.50 Tm (NIDS detections) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 169.50 Tm (0) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 156.00 Tm (Analyst notes) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 156.00 Tm (1) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 142.50 Tm (Timeline events) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 142.50 Tm (3) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 129.00 Tm (Report schema) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 129.00 Tm (2.0) Tj ET
+BT 0.392 0.455 0.545 rg /F2 9.5 Tf 1 0 0 1 54.00 115.50 Tm (Generator) Tj ET
+BT 0.059 0.090 0.165 rg /F1 9.5 Tf 1 0 0 1 204.00 115.50 Tm (Cybersecurity Analyst Platform report engine) Tj ET
+0.796 0.835 0.882 RG 0.75 w 54 54.00 m 558 54.00 l S
+BT 0.392 0.455 0.545 rg /F1 7.5 Tf 1 0 0 1 54.00 42.00 Tm (Cybersecurity Analyst Platform  �  Investigation ID: CASE-2026-0009  �  Generated: 2026-09-21 19:25:02 UTC) Tj ET
+BT 0.059 0.090 0.165 rg /F2 7.5 Tf 1 0 0 1 513.04 42.00 Tm (Page 2 of 2) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Title (Test case) /Producer (Cybersecurity Analyst Platform) /Creator (Cybersecurity Analyst Platform) >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000344 00000 n 
+0000000490 00000 n 
+0000007189 00000 n 
+0000007335 00000 n 
+0000016322 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R /Info 10 0 R >>
+startxref
+16448
+%%EOF
