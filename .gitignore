@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+venv/
+.venv/
+.env
+.env.*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local app data
+nids_database.db
+*.sqlite3
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db

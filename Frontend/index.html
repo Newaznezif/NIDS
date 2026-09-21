@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIDS — Network Intrusion Detection System</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+
+    <!-- Top Navigation / Header -->
+    <header class="top-nav">
+        <div class="brand">
+            <div class="shield-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="brand-text">
+                <h1>NIDS <span>SOC ENGINE</span></h1>
+                <p>Network Intrusion Detection System</p>
+            </div>
+        </div>
+
+        <div class="status-center">
+            <!-- Mode Status Pill -->
+            <div id="mode-status-badge" class="status-pill status-demo">
+                <span class="status-dot"></span>
+                <span id="mode-status-text">DEMO MODE</span>
+            </div>
+
+            <!-- Socket Connection Badge -->
+            <div id="connection-badge" class="status-pill status-connecting">
+                <i class="fa-solid fa-signal"></i>
+                <span id="connection-status-text">Connecting...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="dashboard-container">
+
+        <!-- Action Control Bar -->
+        <section class="control-bar">
+            <div class="control-title">
+                <i class="fa-solid fa-terminal"></i>
+                <span>SIMULATION & CONTROL PANEL</span>
+            </div>
+            <div class="control-actions">
+                <button id="btn-demo-portscan" class="btn btn-primary">
+                    <i class="fa-solid fa-radar"></i> Simulate Port Scan
+                </button>
+                <button id="btn-demo-synflood" class="btn btn-warning">
+                    <i class="fa-solid fa-bolt"></i> Simulate SYN Flood
+                </button>
+                <button id="btn-refresh" class="btn btn-secondary">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
+                <button id="btn-clear" class="btn btn-danger">
+                    <i class="fa-solid fa-trash-can"></i> Clear Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Metric Summary Cards -->
+        <section class="metrics-grid">
+
+            <div class="metric-card card-total-attacks">
+                <div class="card-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="card-info">
+                    <span class="card-label">TOTAL ATTACKS</span>
+                    <h2 id="metric-total-attacks" class="card-value">0</h2>
+                    <span class="card-sub">Detected security incidents</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-active-threats">
+                <div class="card-icon"><i class="fa-solid fa-radiation"></i></div>
+                <div class="card-info">
+                    <span class="card-label">ACTIVE THREATS</span>
+                    <h2 id="metric-active-threats" class="card-value">0</h2>
+                    <span class="card-sub">Unresolved high alerts</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-total-alerts">
+                <div class="card-icon"><i class="fa-solid fa-bell"></i></div>
+                <div class="card-info">
+                    <span class="card-label">TOTAL ALERTS</span>
+                    <h2 id="metric-total-alerts" class="card-value">0</h2>
+                    <span class="card-sub">Recorded event entries</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-packets">
+                <div class="card-icon"><i class="fa-solid fa-network-wired"></i></div>
+                <div class="card-info">
+                    <span class="card-label">PACKETS ANALYZED</span>
+                    <h2 id="metric-packets" class="card-value">0</h2>
+                    <span class="card-sub">Traffic packets inspected</span>
+                </div>
+            </div>
+
+            <div class="metric-card card-rate">
+                <div class="card-icon"><i class="fa-solid fa-percent"></i></div>
+                <div class="card-info">
+                    <span class="card-label">DETECTION RATE</span>
+                    <h2 id="metric-rate" class="card-value">0.0%</h2>
+                    <span class="card-sub">Threat payload ratio</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Analytics Charts Grid -->
+        <section class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-chart-line"></i> Attacks Timeline</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-timeline"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Attack Categories</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-attack-types"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-layer-group"></i> Severity Breakdown</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-severity"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fa-solid fa-user-secret"></i> Top Attacker IPs</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-top-attackers"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Security Event Log -->
+        <section class="alerts-section">
+            <div class="section-header">
+                <div class="title-group">
+                    <h2><i class="fa-solid fa-list-check"></i> Live Security Events Feed</h2>
+                    <span id="alerts-count-badge" class="badge">0 Events</span>
+                </div>
+                <div class="filter-group">
+                    <input type="text" id="alert-search" placeholder="Search IP, type or detail..." class="form-input">
+                    <select id="severity-filter" class="form-select">
+                        <option value="ALL">All Severities</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="LOW">LOW</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>TIMESTAMP</th>
+                            <th>SEVERITY</th>
+                            <th>ATTACK TYPE</th>
+                            <th>SOURCE IP</th>
+                            <th>DEST IP</th>
+                            <th>PROTO</th>
+                            <th>CONFIDENCE</th>
+                            <th>STATUS</th>
+                            <th>DETAILS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-table-body">
+                        <tr>
+                            <td colspan="10" class="empty-state">
+                                <i class="fa-solid fa-shield-cat"></i>
+                                <p>No security alerts recorded yet. Click "Simulate Port Scan" to trigger the detection engine.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>NIDS &copy; 2026 — Rule-Based Network Intrusion Detection Engine & Monitor</p>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
